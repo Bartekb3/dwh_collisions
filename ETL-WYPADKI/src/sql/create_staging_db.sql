@@ -207,4 +207,25 @@ BEGIN
         casualty_age_band_31_60 INT,
         casualty_age_band_60_plus INT
     );
+END
+GO
+
+IF OBJECT_ID('dbo.Stg_Weather', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Stg_Weather (
+        weather_date DATE,
+        longitude FLOAT,
+        latitude FLOAT,
+        tavg FLOAT,
+        tmin FLOAT,
+        tmax FLOAT,
+        prcp FLOAT,
+        snow FLOAT,
+        wdir FLOAT,
+        wspd FLOAT,
+        wpgt FLOAT,
+        pres FLOAT,
+        tsun FLOAT
+    );
 END;
+

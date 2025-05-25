@@ -1,1 +1,3 @@
 przy laczeniu z vs do sql servera: Server Name localhost i Crtification na false
+
+zeby skrypt pythona dzia³a³ trzeba dodaæ sciezke do pythona z ktorego skrypt ma korzystac i dla tego pythona musza byc zainstalowane biblioteki (pandas, meteostat etc)

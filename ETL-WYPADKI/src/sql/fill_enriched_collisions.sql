@@ -1,4 +1,4 @@
--- 1. Dane z wypadków
+-- skryppt jest wkopiowany w EnrichCollisions
 -- 1. Dane z wypadków
 WITH base_c AS (
     SELECT 
