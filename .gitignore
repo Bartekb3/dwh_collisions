@@ -1,0 +1,21 @@
+# Build output folders
+**/bin/
+**/obj/
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# SSIS temporary folders (jeœli dotyczy)
+**/.DTSPROJ.user
+
+# Visual Studio Code (jeœli u¿ywasz)
+.vscode/
+
+# Python virtual environments (jeœli u¿ywasz Pythona)
+venv/
+.env/
+# Ignoruj wszystkie foldery .vs w ca³ym repo
+**/.vs/

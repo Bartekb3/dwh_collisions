@@ -1,0 +1,1 @@
+przy laczeniu z vs do sql servera: Server Name localhost i Crtification na false
