@@ -44,15 +44,15 @@ CREATE TABLE dbo.dim_location (
     local_authority_district VARCHAR(50) NOT NULL,
     road_type VARCHAR(50) NOT NULL,
     speed_limit INT NOT NULL,
-    junction_detail VARCHAR(50),
-    junction_control VARCHAR(50),
-    carriageway_hazards VARCHAR(100),
+    junction_detail VARCHAR(50) NOT NULL,
+    junction_control VARCHAR(50) NOT NULL,
+    carriageway_hazards VARCHAR(100) NOT NULL,
     urban_or_rural_area VARCHAR(20) NOT NULL,
     trunk_road_flag BIT NOT NULL,
     first_road_class VARCHAR(10) NOT NULL,
     first_road_number INT NOT NULL,
-    second_road_class VARCHAR(10),
-    second_road_number INT
+    second_road_class VARCHAR(10) NOT NULL,
+    second_road_number INT NOT NULL
 );
 GO
 
@@ -66,16 +66,16 @@ CREATE TABLE dbo.dim_weather (
     weather_date DATE NOT NULL,
     longitude FLOAT NOT NULL,                 -- zaokr¹glone do 1 miejsca
     latitude FLOAT NOT NULL,
-    tavg FLOAT,
-    tmin FLOAT,
-    tmax FLOAT,
-    prcp FLOAT,
-    snow FLOAT,
-    wdir FLOAT,
-    wspd FLOAT,
-    wpgt FLOAT,
-    pres FLOAT,
-    tsun FLOAT
+    tavg FLOAT NOT NULL,
+    tmin FLOAT NOT NULL,
+    tmax FLOAT NOT NULL,
+    prcp FLOAT NOT NULL,
+    snow FLOAT NOT NULL,
+    wdir FLOAT NOT NULL,
+    wspd FLOAT NOT NULL,
+    wpgt FLOAT NOT NULL,
+    pres FLOAT NOT NULL,
+    tsun FLOAT NOT NULL
 );
 
 
@@ -105,8 +105,8 @@ CREATE TABLE dbo.fact_collision (
     vehicle_manoeuvre_turning_right INT NOT NULL,
     vehicle_manoeuvre_overtaking INT NOT NULL,
     vehicle_left_hand_drive_count INT NOT NULL,
-    avg_vehicle_age DECIMAL(10,2),
-    avg_engine_capacity_cc DECIMAL(10,2),
+    avg_vehicle_age DECIMAL(10,2) NOT NULL,
+    avg_engine_capacity_cc DECIMAL(10,2) NOT NULL,
 
     driver_sex_male INT NOT NULL,
     driver_sex_female INT NOT NULL,
