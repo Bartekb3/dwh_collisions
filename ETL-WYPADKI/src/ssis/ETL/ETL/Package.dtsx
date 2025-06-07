@@ -11,8 +11,8 @@
   DTS:LocaleID="1045"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="76"
-  DTS:VersionGUID="{27407092-BD15-415B-A4FD-B50845D09334}">
+  DTS:VersionBuild="103"
+  DTS:VersionGUID="{5EB127C2-1B66-442C-B054-1EB6733195AC}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -969,7 +969,34 @@
       DTS:Namespace="User"
       DTS:ObjectName="CurrentYear">
       <DTS:VariableValue
-        DTS:DataType="8">2019</DTS:VariableValue>
+        DTS:DataType="8">2020</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{FEAE607C-0CB5-4B98-9927-698476E4D1BB}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="RowCount_Casualty">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{A8D1A53A-D2D8-4F52-9B94-D96C140372DD}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="RowCount_Collision">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
+    </DTS:Variable>
+    <DTS:Variable
+      DTS:CreationName=""
+      DTS:DTSID="{7968DB0D-6493-4DAC-948A-40309BA807A2}"
+      DTS:IncludeInDebugDump="6789"
+      DTS:Namespace="User"
+      DTS:ObjectName="RowCount_Vehicle">
+      <DTS:VariableValue
+        DTS:DataType="20">0</DTS:VariableValue>
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
@@ -988,7 +1015,7 @@
       DTS:Namespace="User"
       DTS:ObjectName="YearList">
       <DTS:VariableValue
-        DTS:DataType="8">2019</DTS:VariableValue>
+        DTS:DataType="8">2020</DTS:VariableValue>
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
@@ -1010,6 +1037,23 @@
     </DTS:Variable>
   </DTS:Variables>
   <DTS:Executables>
+    <DTS:Executable
+      DTS:refId="Package\CleanupStagingTables"
+      DTS:CreationName="Microsoft.ExecuteSQLTask"
+      DTS:Description="Delete data from staging to handle adding data to warehouse"
+      DTS:DTSID="{332A25EB-CB00-4D61-A835-545A0987DF9B}"
+      DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="CleanupStagingTables"
+      DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+      DTS:ThreadHint="0">
+      <DTS:Variables />
+      <DTS:ObjectData>
+        <SQLTask:SqlTaskData
+          SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+          SQLTask:SqlStatementSource="USE DWH_Staging;&#xA;GO&#xA;&#xA;-- Tabele zależne&#xA;DELETE FROM dbo.Stg_Casualties_Raw;&#xA;DELETE FROM dbo.Stg_Vehicles_Raw;&#xA;&#xA;-- Główna tabela źródłowa&#xA;DELETE FROM dbo.Stg_Collisions_Raw;&#xA;&#xA;-- Tabele pośrednie i wzbogacone&#xA;DELETE FROM dbo.Stg_Collisions_Enriched;&#xA;DELETE FROM dbo.Stg_Weather;&#xA;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+      </DTS:ObjectData>
+    </DTS:Executable>
     <DTS:Executable
       DTS:refId="Package\DownloadWeather"
       DTS:CreationName="Microsoft.ExecuteProcess"
@@ -1041,8 +1085,210 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
-          SQLTask:SqlStatementSource="-- 1. Dane z wypadków&#xA;-- 1. Dane z wypadków&#xA;WITH base_c AS (&#xA;    SELECT &#xA;        accident_index,&#xA;        CONVERT(DATE, date, 103) AS [date],&#xA;&#x9;&#x9;TRY_CAST([time] AS TIME) AS accident_time,&#xA;        TRY_CAST(longitude AS FLOAT) AS longitude,&#xA;        TRY_CAST(latitude AS FLOAT) AS latitude,&#xA;        CASE WHEN ISNUMERIC(accident_severity) = 1 AND accident_severity NOT IN ('-1', 'NULL') &#xA;             THEN CAST(accident_severity AS SMALLINT) ELSE NULL END AS accident_severity,&#xA;        CASE WHEN ISNUMERIC(number_of_vehicles) = 1 AND number_of_vehicles NOT IN ('-1', 'NULL') &#xA;             THEN CAST(number_of_vehicles AS SMALLINT) ELSE NULL END AS number_of_vehicles,&#xA;        CASE WHEN ISNUMERIC(number_of_casualties) = 1 AND number_of_casualties NOT IN ('-1', 'NULL') &#xA;             THEN CAST(number_of_casualties AS SMALLINT) ELSE NULL END AS number_of_casualties,&#xA;        CASE WHEN did_police_officer_attend_scene_of_accident = '1' THEN 1 ELSE 0 END AS police_attended,&#xA;&#xA;&#x9;&#x9;CAST(TRY_CAST(enhanced_severity_collision AS INT) AS SMALLINT) AS enhanced_severity_collision,&#xA;&#xA;        CASE WHEN ISNUMERIC(location_easting_osgr) = 1 AND location_easting_osgr NOT IN ('-1', 'NULL') &#xA;             THEN CAST(location_easting_osgr AS INT) ELSE NULL END AS location_easting_osgr,&#xA;        CASE WHEN ISNUMERIC(location_northing_osgr) = 1 AND location_northing_osgr NOT IN ('-1', 'NULL') &#xA;             THEN CAST(location_northing_osgr AS INT) ELSE NULL END AS location_northing_osgr,&#xA;&#xA;        local_authority_district,&#xA;        local_authority_ons_district,&#xA;        local_authority_highway,&#xA;&#xA;        CASE WHEN ISNUMERIC(first_road_class) = 1 AND first_road_class NOT IN ('-1', 'NULL') &#xA;             THEN CAST(first_road_class AS INT) ELSE NULL END AS first_road_class,&#xA;        CASE WHEN ISNUMERIC(first_road_number) = 1 AND first_road_number NOT IN ('-1', 'NULL') &#xA;             THEN CAST(first_road_number AS INT) ELSE NULL END AS first_road_number,&#xA;        CASE WHEN ISNUMERIC(second_road_class) = 1 AND second_road_class NOT IN ('-1', 'NULL') &#xA;             THEN CAST(second_road_class AS INT) ELSE NULL END AS second_road_class,&#xA;      --  CASE WHEN ISNUMERIC(second_road_number) = 1 AND second_road_number NOT IN ('-1', 'NULL') &#xA;        --     THEN CAST(second_road_number AS INT) ELSE NULL END AS second_road_number,&#xA;&#x9;&#x9;ISNULL(&#xA;    CASE WHEN ISNUMERIC(second_road_number) = 1 &#xA;         THEN CAST(second_road_number AS INT) &#xA;         ELSE NULL END, &#xA;    -1&#xA;) AS second_road_number,&#xA;&#xA;        road_type,&#xA;&#xA;        CASE WHEN ISNUMERIC(speed_limit) = 1 AND speed_limit NOT IN ('-1', 'NULL') &#xA;             THEN CAST(speed_limit AS INT) ELSE NULL END AS speed_limit,&#xA;        CASE WHEN ISNUMERIC(junction_detail) = 1 AND junction_detail NOT IN ('-1', 'NULL') &#xA;             THEN CAST(junction_detail AS INT) ELSE NULL END AS junction_detail,&#xA;        --CASE WHEN ISNUMERIC(junction_control) = 1 AND junction_control NOT IN ('-1', 'NULL') &#xA;         --    THEN CAST(junction_control AS INT) ELSE NULL END AS junction_control,&#xA;&#x9;&#x9; ISNULL(&#xA;    CASE WHEN ISNUMERIC(junction_control) = 1 &#xA;         THEN CAST(junction_control AS INT) &#xA;         ELSE NULL END, &#xA;    -1&#xA;) AS junction_control,&#xA;        CASE WHEN ISNUMERIC(pedestrian_crossing_human_control) = 1 AND pedestrian_crossing_human_control NOT IN ('-1', 'NULL') &#xA;             THEN CAST(pedestrian_crossing_human_control AS INT) ELSE NULL END AS pedestrian_crossing_human_control,&#xA;        CASE WHEN ISNUMERIC(pedestrian_crossing_physical_facilities) = 1 AND pedestrian_crossing_physical_facilities NOT IN ('-1', 'NULL') &#xA;             THEN CAST(pedestrian_crossing_physical_facilities AS INT) ELSE NULL END AS pedestrian_crossing_physical_facilities,&#xA;        CASE WHEN ISNUMERIC(light_conditions) = 1 AND light_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(light_conditions AS INT) ELSE NULL END AS light_conditions,&#xA;        CASE WHEN ISNUMERIC(weather_conditions) = 1 AND weather_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(weather_conditions AS INT) ELSE NULL END AS weather_conditions,&#xA;        CASE WHEN ISNUMERIC(road_surface_conditions) = 1 AND road_surface_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(road_surface_conditions AS INT) ELSE NULL END AS road_surface_conditions,&#xA;        CASE WHEN ISNUMERIC(special_conditions_at_site) = 1 AND special_conditions_at_site NOT IN ('-1', 'NULL') &#xA;             THEN CAST(special_conditions_at_site AS INT) ELSE NULL END AS special_conditions_at_site,&#xA;        CASE WHEN ISNUMERIC(carriageway_hazards) = 1 AND carriageway_hazards NOT IN ('-1', 'NULL') &#xA;             THEN CAST(carriageway_hazards AS INT) ELSE NULL END AS carriageway_hazards,&#xA;        CASE WHEN ISNUMERIC(urban_or_rural_area) = 1 AND urban_or_rural_area NOT IN ('-1', 'NULL') &#xA;             THEN CAST(urban_or_rural_area AS INT) ELSE NULL END AS urban_or_rural_area,&#xA;&#xA;        CASE WHEN trunk_road_flag = '1' THEN 1 ELSE 0 END AS trunk_road_flag,&#xA;        lsoa_of_accident_location&#xA;    FROM dbo.Stg_Collisions_Raw&#xA;)&#xA;&#xA;,&#xA;&#xA;&#xA;-- 2. Agregacja danych o pojazdach&#xA;agg_v AS (&#xA;    SELECT&#xA;        accident_index,&#xA;        MAX(CASE WHEN escooter_flag = '1' THEN 1 ELSE 0 END) AS escooter_involved,&#xA;        SUM(CASE WHEN vehicle_type = '9' THEN 1 ELSE 0 END) AS vehicle_type_car,&#xA;        SUM(CASE WHEN vehicle_type = '1' THEN 1 ELSE 0 END) AS vehicle_type_bus,&#xA;        SUM(CASE WHEN vehicle_type = '2' THEN 1 ELSE 0 END) AS vehicle_type_motorcycle,&#xA;        SUM(CASE WHEN vehicle_type = '3' THEN 1 ELSE 0 END) AS vehicle_type_goods,&#xA;        SUM(CASE WHEN vehicle_type NOT IN ('1','2','3','9') THEN 1 ELSE 0 END) AS vehicle_type_other,&#xA;        &#xA;        SUM(CASE WHEN vehicle_manoeuvre = '18' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_turning_left,&#xA;        SUM(CASE WHEN vehicle_manoeuvre = '19' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_turning_right,&#xA;        SUM(CASE WHEN vehicle_manoeuvre = '14' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_overtaking,&#xA;        SUM(CASE WHEN vehicle_left_hand_drive = '1' THEN 1 ELSE 0 END) AS vehicle_left_hand_drive_count,&#xA;        &#xA;        CAST(AVG(CASE &#xA;            WHEN TRY_CAST(age_of_vehicle AS FLOAT) BETWEEN 0 AND 100 &#xA;            THEN TRY_CAST(age_of_vehicle AS FLOAT) &#xA;            ELSE NULL END) AS DECIMAL(10,2)) AS avg_vehicle_age,&#xA;        &#xA;        CAST(AVG(CASE &#xA;            WHEN TRY_CAST(engine_capacity_cc AS FLOAT) BETWEEN 100 AND 20000 &#xA;            THEN TRY_CAST(engine_capacity_cc AS FLOAT) &#xA;            ELSE NULL END) AS DECIMAL(10,2)) AS avg_engine_capacity_cc,&#xA;&#xA;        SUM(CASE WHEN sex_of_driver = '1' THEN 1 ELSE 0 END) AS driver_sex_male,&#xA;        SUM(CASE WHEN sex_of_driver = '2' THEN 1 ELSE 0 END) AS driver_sex_female,&#xA;        &#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) BETWEEN 0 AND 25 THEN 1 ELSE 0 END) AS driver_age_band_0_25,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) BETWEEN 26 AND 50 THEN 1 ELSE 0 END) AS driver_age_band_26_50,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) &gt; 50 THEN 1 ELSE 0 END) AS driver_age_band_51_plus,&#xA;&#xA;        SUM(CASE WHEN journey_purpose_of_driver = '1' THEN 1 ELSE 0 END) AS driver_purpose_commute,&#xA;        SUM(CASE WHEN journey_purpose_of_driver = '2' THEN 1 ELSE 0 END) AS driver_purpose_education,&#xA;        SUM(CASE WHEN journey_purpose_of_driver NOT IN ('1','2') THEN 1 ELSE 0 END) AS driver_purpose_other&#xA;&#xA;    FROM dbo.Stg_Vehicles_Raw&#xA;    GROUP BY accident_index&#xA;),&#xA;&#xA;-- 3. Agregacja danych o ofiarach&#xA;agg_ca AS (&#xA;    SELECT &#xA;        accident_index,&#xA;        SUM(CASE WHEN casualty_class = '1' THEN 1 ELSE 0 END) AS casualty_class_driver,&#xA;        SUM(CASE WHEN casualty_class = '2' THEN 1 ELSE 0 END) AS casualty_class_passenger,&#xA;        SUM(CASE WHEN casualty_class = '3' THEN 1 ELSE 0 END) AS casualty_class_pedestrian,&#xA;&#xA;        SUM(CASE WHEN casualty_severity = '1' THEN 1 ELSE 0 END) AS casualty_severity_fatal,&#xA;        SUM(CASE WHEN casualty_severity = '2' THEN 1 ELSE 0 END) AS casualty_severity_serious,&#xA;        SUM(CASE WHEN casualty_severity = '3' THEN 1 ELSE 0 END) AS casualty_severity_slight,&#xA;&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 0 AND 15 THEN 1 ELSE 0 END) AS casualty_age_band_0_15,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 16 AND 30 THEN 1 ELSE 0 END) AS casualty_age_band_16_30,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 31 AND 60 THEN 1 ELSE 0 END) AS casualty_age_band_31_60,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) &gt; 60 THEN 1 ELSE 0 END) AS casualty_age_band_60_plus&#xA;&#xA;    FROM dbo.Stg_Casualties_Raw&#xA;    GROUP BY accident_index&#xA;)&#xA;&#xA;-- 4. Połączenie wszystkiego i INSERT&#xA;INSERT INTO dbo.Stg_Collisions_Enriched (&#xA;    accident_index, [date],accident_time, longitude, latitude, accident_severity, number_of_vehicles,&#xA;    number_of_casualties, police_attended, escooter_involved, enhanced_severity_collision,&#xA;&#xA;    -- Nowe kolumny lokalizacji i drogi&#xA;    location_easting_osgr, location_northing_osgr,&#xA;    local_authority_district, local_authority_ons_district, local_authority_highway,&#xA;    first_road_class, first_road_number, second_road_class, second_road_number,&#xA;    road_type, speed_limit, junction_detail, junction_control,&#xA;    pedestrian_crossing_human_control, pedestrian_crossing_physical_facilities,&#xA;    light_conditions, weather_conditions, road_surface_conditions,&#xA;    special_conditions_at_site, carriageway_hazards, urban_or_rural_area,&#xA;    trunk_road_flag, lsoa_of_accident_location,&#xA;&#xA;    -- Dotychczasowe dane&#xA;    vehicle_type_car, vehicle_type_bus, vehicle_type_motorcycle, vehicle_type_goods, vehicle_type_other,&#xA;    vehicle_manoeuvre_turning_left, vehicle_manoeuvre_turning_right, vehicle_manoeuvre_overtaking,&#xA;    vehicle_left_hand_drive_count, avg_vehicle_age, avg_engine_capacity_cc,&#xA;    driver_sex_male, driver_sex_female,&#xA;    driver_age_band_0_25, driver_age_band_26_50, driver_age_band_51_plus,&#xA;    driver_purpose_commute, driver_purpose_education, driver_purpose_other,&#xA;    casualty_class_driver, casualty_class_passenger, casualty_class_pedestrian,&#xA;    casualty_severity_fatal, casualty_severity_serious, casualty_severity_slight,&#xA;    casualty_age_band_0_15, casualty_age_band_16_30, casualty_age_band_31_60, casualty_age_band_60_plus&#xA;)&#xA;SELECT &#xA;    c.accident_index, c.[date],c.accident_time, c.longitude, c.latitude, c.accident_severity,&#xA;    c.number_of_vehicles, c.number_of_casualties, c.police_attended,&#xA;    ISNULL(v.escooter_involved, 0),&#xA;    c.enhanced_severity_collision,&#xA;&#xA;    -- Nowe kolumny lokalizacji i drogi&#xA;    c.location_easting_osgr, c.location_northing_osgr,&#xA;    c.local_authority_district, c.local_authority_ons_district, c.local_authority_highway,&#xA;    c.first_road_class, c.first_road_number, c.second_road_class, c.second_road_number,&#xA;    c.road_type, c.speed_limit, c.junction_detail, c.junction_control,&#xA;    c.pedestrian_crossing_human_control, c.pedestrian_crossing_physical_facilities,&#xA;    c.light_conditions, c.weather_conditions, c.road_surface_conditions,&#xA;    c.special_conditions_at_site, c.carriageway_hazards, c.urban_or_rural_area,&#xA;    c.trunk_road_flag, c.lsoa_of_accident_location,&#xA;&#xA;    -- Dane z pojazdów i ofiar&#xA;    ISNULL(v.vehicle_type_car, 0), ISNULL(v.vehicle_type_bus, 0),&#xA;    ISNULL(v.vehicle_type_motorcycle, 0), ISNULL(v.vehicle_type_goods, 0),&#xA;    ISNULL(v.vehicle_type_other, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_turning_left, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_turning_right, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_overtaking, 0),&#xA;    ISNULL(v.vehicle_left_hand_drive_count, 0),&#xA;    ISNULL(v.avg_vehicle_age, 0),&#xA;    ISNULL(v.avg_engine_capacity_cc, 0),&#xA;    ISNULL(v.driver_sex_male, 0), ISNULL(v.driver_sex_female, 0),&#xA;    ISNULL(v.driver_age_band_0_25, 0), ISNULL(v.driver_age_band_26_50, 0),&#xA;    ISNULL(v.driver_age_band_51_plus, 0),&#xA;    ISNULL(v.driver_purpose_commute, 0), ISNULL(v.driver_purpose_education, 0),&#xA;    ISNULL(v.driver_purpose_other, 0),&#xA;    ISNULL(ca.casualty_class_driver, 0), ISNULL(ca.casualty_class_passenger, 0),&#xA;    ISNULL(ca.casualty_class_pedestrian, 0),&#xA;    ISNULL(ca.casualty_severity_fatal, 0), ISNULL(ca.casualty_severity_serious, 0),&#xA;    ISNULL(ca.casualty_severity_slight, 0),&#xA;    ISNULL(ca.casualty_age_band_0_15, 0), ISNULL(ca.casualty_age_band_16_30, 0),&#xA;    ISNULL(ca.casualty_age_band_31_60, 0), ISNULL(ca.casualty_age_band_60_plus, 0)&#xA;&#xA;FROM base_c c&#xA;LEFT JOIN agg_v v ON c.accident_index = v.accident_index&#xA;LEFT JOIN agg_ca ca ON c.accident_index = ca.accident_index;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="-- 1. Dane z wypadków&#xA;WITH base_c AS (&#xA;    SELECT &#xA;        accident_index,&#xA;        CONVERT(DATE, date, 103) AS [date],&#xA;        TRY_CAST([time] AS TIME) AS accident_time,&#xA;        ISNULL(TRY_CAST(longitude AS FLOAT), -0.1278) AS longitude,  -- Londyn&#xA;        ISNULL(TRY_CAST(latitude AS FLOAT), 51.5074) AS latitude,   -- Londyn&#xA;        ISNULL(CASE WHEN ISNUMERIC(accident_severity) = 1 AND accident_severity NOT IN ('-1', 'NULL') &#xA;             THEN CAST(accident_severity AS SMALLINT) ELSE NULL END, 3) AS accident_severity,&#xA;        ISNULL(CASE WHEN ISNUMERIC(number_of_vehicles) = 1 AND number_of_vehicles NOT IN ('-1', 'NULL') &#xA;             THEN CAST(number_of_vehicles AS SMALLINT) ELSE NULL END, 1) AS number_of_vehicles,&#xA;        ISNULL(CASE WHEN ISNUMERIC(number_of_casualties) = 1 AND number_of_casualties NOT IN ('-1', 'NULL') &#xA;             THEN CAST(number_of_casualties AS SMALLINT) ELSE NULL END, 0) AS number_of_casualties,&#xA;        CASE WHEN did_police_officer_attend_scene_of_accident = '1' THEN 1 ELSE 0 END AS police_attended,&#xA;&#xA;        ISNULL(CAST(TRY_CAST(enhanced_severity_collision AS INT) AS SMALLINT), 0) AS enhanced_severity_collision,&#xA;&#xA;        ISNULL(CASE WHEN ISNUMERIC(location_easting_osgr) = 1 AND location_easting_osgr NOT IN ('-1', 'NULL') &#xA;             THEN CAST(location_easting_osgr AS INT) ELSE NULL END, 0) AS location_easting_osgr,&#xA;        ISNULL(CASE WHEN ISNUMERIC(location_northing_osgr) = 1 AND location_northing_osgr NOT IN ('-1', 'NULL') &#xA;             THEN CAST(location_northing_osgr AS INT) ELSE NULL END, 0) AS location_northing_osgr,&#xA;&#xA;        ISNULL(local_authority_district, 'UNKNOWN') AS local_authority_district,&#xA;        ISNULL(local_authority_ons_district, 'UNKNOWN') AS local_authority_ons_district,&#xA;        ISNULL(local_authority_highway, 'UNKNOWN') AS local_authority_highway,&#xA;&#xA;        ISNULL(CASE WHEN ISNUMERIC(first_road_class) = 1 AND first_road_class NOT IN ('-1', 'NULL') &#xA;             THEN CAST(first_road_class AS INT) ELSE NULL END, 6) AS first_road_class,&#xA;        ISNULL(CASE WHEN ISNUMERIC(first_road_number) = 1 AND first_road_number NOT IN ('-1', 'NULL') &#xA;             THEN CAST(first_road_number AS INT) ELSE NULL END, 0) AS first_road_number,&#xA;        ISNULL(CASE WHEN ISNUMERIC(second_road_class) = 1 AND second_road_class NOT IN ('-1', 'NULL') &#xA;             THEN CAST(second_road_class AS INT) ELSE NULL END, 6) AS second_road_class,&#xA;        ISNULL(CASE WHEN ISNUMERIC(second_road_number) = 1 &#xA;             THEN CAST(second_road_number AS INT) ELSE NULL END, -1) AS second_road_number,&#xA;&#xA;        ISNULL(road_type, 'UNKNOWN') AS road_type,&#xA;&#xA;        ISNULL(CASE WHEN ISNUMERIC(speed_limit) = 1 AND speed_limit NOT IN ('-1', 'NULL') &#xA;             THEN CAST(speed_limit AS INT) ELSE NULL END, 30) AS speed_limit,&#xA;        ISNULL(CASE WHEN ISNUMERIC(junction_detail) = 1 AND junction_detail NOT IN ('-1', 'NULL') &#xA;             THEN CAST(junction_detail AS INT) ELSE NULL END, -1) AS junction_detail,&#xA;        ISNULL(CASE WHEN ISNUMERIC(junction_control) = 1 &#xA;             THEN CAST(junction_control AS INT) ELSE NULL END, -1) AS junction_control,&#xA;        ISNULL(CASE WHEN ISNUMERIC(pedestrian_crossing_human_control) = 1 AND pedestrian_crossing_human_control NOT IN ('-1', 'NULL') &#xA;             THEN CAST(pedestrian_crossing_human_control AS INT) ELSE NULL END, 0) AS pedestrian_crossing_human_control,&#xA;        ISNULL(CASE WHEN ISNUMERIC(pedestrian_crossing_physical_facilities) = 1 AND pedestrian_crossing_physical_facilities NOT IN ('-1', 'NULL') &#xA;             THEN CAST(pedestrian_crossing_physical_facilities AS INT) ELSE NULL END, 0) AS pedestrian_crossing_physical_facilities,&#xA;        ISNULL(CASE WHEN ISNUMERIC(light_conditions) = 1 AND light_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(light_conditions AS INT) ELSE NULL END, 1) AS light_conditions,&#xA;        ISNULL(CASE WHEN ISNUMERIC(weather_conditions) = 1 AND weather_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(weather_conditions AS INT) ELSE NULL END, 1) AS weather_conditions,&#xA;        ISNULL(CASE WHEN ISNUMERIC(road_surface_conditions) = 1 AND road_surface_conditions NOT IN ('-1', 'NULL') &#xA;             THEN CAST(road_surface_conditions AS INT) ELSE NULL END, 1) AS road_surface_conditions,&#xA;        ISNULL(CASE WHEN ISNUMERIC(special_conditions_at_site) = 1 AND special_conditions_at_site NOT IN ('-1', 'NULL') &#xA;             THEN CAST(special_conditions_at_site AS INT) ELSE NULL END, 0) AS special_conditions_at_site,&#xA;        ISNULL(CASE WHEN ISNUMERIC(carriageway_hazards) = 1 AND carriageway_hazards NOT IN ('-1', 'NULL') &#xA;             THEN CAST(carriageway_hazards AS INT) ELSE NULL END, -1) AS carriageway_hazards,&#xA;        ISNULL(CASE WHEN ISNUMERIC(urban_or_rural_area) = 1 AND urban_or_rural_area NOT IN ('-1', 'NULL') &#xA;             THEN CAST(urban_or_rural_area AS INT) ELSE NULL END, 1) AS urban_or_rural_area,&#xA;&#xA;        ISNULL(CASE WHEN trunk_road_flag = '1' THEN 1 ELSE 0 END, 0) AS trunk_road_flag,&#xA;        ISNULL(lsoa_of_accident_location, 'UNKNOWN') AS lsoa_of_accident_location&#xA;    FROM dbo.Stg_Collisions_Raw&#xA;)&#xA;&#xA;,&#xA;&#xA;&#xA;-- 2. Agregacja danych o pojazdach&#xA;agg_v AS (&#xA;    SELECT&#xA;        accident_index,&#xA;        MAX(CASE WHEN escooter_flag = '1' THEN 1 ELSE 0 END) AS escooter_involved,&#xA;        SUM(CASE WHEN vehicle_type = '9' THEN 1 ELSE 0 END) AS vehicle_type_car,&#xA;        SUM(CASE WHEN vehicle_type = '1' THEN 1 ELSE 0 END) AS vehicle_type_bus,&#xA;        SUM(CASE WHEN vehicle_type = '2' THEN 1 ELSE 0 END) AS vehicle_type_motorcycle,&#xA;        SUM(CASE WHEN vehicle_type = '3' THEN 1 ELSE 0 END) AS vehicle_type_goods,&#xA;        SUM(CASE WHEN vehicle_type NOT IN ('1','2','3','9') THEN 1 ELSE 0 END) AS vehicle_type_other,&#xA;        &#xA;        SUM(CASE WHEN vehicle_manoeuvre = '18' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_turning_left,&#xA;        SUM(CASE WHEN vehicle_manoeuvre = '19' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_turning_right,&#xA;        SUM(CASE WHEN vehicle_manoeuvre = '14' THEN 1 ELSE 0 END) AS vehicle_manoeuvre_overtaking,&#xA;        SUM(CASE WHEN vehicle_left_hand_drive = '1' THEN 1 ELSE 0 END) AS vehicle_left_hand_drive_count,&#xA;        &#xA;        CAST(AVG(CASE &#xA;            WHEN TRY_CAST(age_of_vehicle AS FLOAT) BETWEEN 0 AND 100 &#xA;            THEN TRY_CAST(age_of_vehicle AS FLOAT) &#xA;            ELSE NULL END) AS DECIMAL(10,2)) AS avg_vehicle_age,&#xA;        &#xA;        CAST(AVG(CASE &#xA;            WHEN TRY_CAST(engine_capacity_cc AS FLOAT) BETWEEN 100 AND 20000 &#xA;            THEN TRY_CAST(engine_capacity_cc AS FLOAT) &#xA;            ELSE NULL END) AS DECIMAL(10,2)) AS avg_engine_capacity_cc,&#xA;&#xA;        SUM(CASE WHEN sex_of_driver = '1' THEN 1 ELSE 0 END) AS driver_sex_male,&#xA;        SUM(CASE WHEN sex_of_driver = '2' THEN 1 ELSE 0 END) AS driver_sex_female,&#xA;        &#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) BETWEEN 0 AND 25 THEN 1 ELSE 0 END) AS driver_age_band_0_25,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) BETWEEN 26 AND 50 THEN 1 ELSE 0 END) AS driver_age_band_26_50,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_driver AS INT) &gt; 50 THEN 1 ELSE 0 END) AS driver_age_band_51_plus,&#xA;&#xA;        SUM(CASE WHEN journey_purpose_of_driver = '1' THEN 1 ELSE 0 END) AS driver_purpose_commute,&#xA;        SUM(CASE WHEN journey_purpose_of_driver = '2' THEN 1 ELSE 0 END) AS driver_purpose_education,&#xA;        SUM(CASE WHEN journey_purpose_of_driver NOT IN ('1','2') THEN 1 ELSE 0 END) AS driver_purpose_other&#xA;&#xA;    FROM dbo.Stg_Vehicles_Raw&#xA;    GROUP BY accident_index&#xA;),&#xA;&#xA;-- 3. Agregacja danych o ofiarach&#xA;agg_ca AS (&#xA;    SELECT &#xA;        accident_index,&#xA;        SUM(CASE WHEN casualty_class = '1' THEN 1 ELSE 0 END) AS casualty_class_driver,&#xA;        SUM(CASE WHEN casualty_class = '2' THEN 1 ELSE 0 END) AS casualty_class_passenger,&#xA;        SUM(CASE WHEN casualty_class = '3' THEN 1 ELSE 0 END) AS casualty_class_pedestrian,&#xA;&#xA;        SUM(CASE WHEN casualty_severity = '1' THEN 1 ELSE 0 END) AS casualty_severity_fatal,&#xA;        SUM(CASE WHEN casualty_severity = '2' THEN 1 ELSE 0 END) AS casualty_severity_serious,&#xA;        SUM(CASE WHEN casualty_severity = '3' THEN 1 ELSE 0 END) AS casualty_severity_slight,&#xA;&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 0 AND 15 THEN 1 ELSE 0 END) AS casualty_age_band_0_15,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 16 AND 30 THEN 1 ELSE 0 END) AS casualty_age_band_16_30,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) BETWEEN 31 AND 60 THEN 1 ELSE 0 END) AS casualty_age_band_31_60,&#xA;        SUM(CASE WHEN TRY_CAST(age_of_casualty AS INT) &gt; 60 THEN 1 ELSE 0 END) AS casualty_age_band_60_plus&#xA;&#xA;    FROM dbo.Stg_Casualties_Raw&#xA;    GROUP BY accident_index&#xA;)&#xA;&#xA;-- 4. Połączenie wszystkiego i INSERT&#xA;INSERT INTO dbo.Stg_Collisions_Enriched (&#xA;    accident_index, [date],accident_time, longitude, latitude, accident_severity, number_of_vehicles,&#xA;    number_of_casualties, police_attended, escooter_involved, enhanced_severity_collision,&#xA;&#xA;    -- Nowe kolumny lokalizacji i drogi&#xA;    location_easting_osgr, location_northing_osgr,&#xA;    local_authority_district, local_authority_ons_district, local_authority_highway,&#xA;    first_road_class, first_road_number, second_road_class, second_road_number,&#xA;    road_type, speed_limit, junction_detail, junction_control,&#xA;    pedestrian_crossing_human_control, pedestrian_crossing_physical_facilities,&#xA;    light_conditions, weather_conditions, road_surface_conditions,&#xA;    special_conditions_at_site, carriageway_hazards, urban_or_rural_area,&#xA;    trunk_road_flag, lsoa_of_accident_location,&#xA;&#xA;    -- Dotychczasowe dane&#xA;    vehicle_type_car, vehicle_type_bus, vehicle_type_motorcycle, vehicle_type_goods, vehicle_type_other,&#xA;    vehicle_manoeuvre_turning_left, vehicle_manoeuvre_turning_right, vehicle_manoeuvre_overtaking,&#xA;    vehicle_left_hand_drive_count, avg_vehicle_age, avg_engine_capacity_cc,&#xA;    driver_sex_male, driver_sex_female,&#xA;    driver_age_band_0_25, driver_age_band_26_50, driver_age_band_51_plus,&#xA;    driver_purpose_commute, driver_purpose_education, driver_purpose_other,&#xA;    casualty_class_driver, casualty_class_passenger, casualty_class_pedestrian,&#xA;    casualty_severity_fatal, casualty_severity_serious, casualty_severity_slight,&#xA;    casualty_age_band_0_15, casualty_age_band_16_30, casualty_age_band_31_60, casualty_age_band_60_plus&#xA;)&#xA;SELECT &#xA;    c.accident_index, c.[date],c.accident_time, c.longitude, c.latitude, c.accident_severity,&#xA;    c.number_of_vehicles, c.number_of_casualties, c.police_attended,&#xA;    ISNULL(v.escooter_involved, 0),&#xA;    c.enhanced_severity_collision,&#xA;&#xA;    -- Nowe kolumny lokalizacji i drogi&#xA;    c.location_easting_osgr, c.location_northing_osgr,&#xA;    c.local_authority_district, c.local_authority_ons_district, c.local_authority_highway,&#xA;    c.first_road_class, c.first_road_number, c.second_road_class, c.second_road_number,&#xA;    c.road_type, c.speed_limit, c.junction_detail, c.junction_control,&#xA;    c.pedestrian_crossing_human_control, c.pedestrian_crossing_physical_facilities,&#xA;    c.light_conditions, c.weather_conditions, c.road_surface_conditions,&#xA;    c.special_conditions_at_site, c.carriageway_hazards, c.urban_or_rural_area,&#xA;    c.trunk_road_flag, c.lsoa_of_accident_location,&#xA;&#xA;    -- Dane z pojazdów i ofiar&#xA;    ISNULL(v.vehicle_type_car, 0), ISNULL(v.vehicle_type_bus, 0),&#xA;    ISNULL(v.vehicle_type_motorcycle, 0), ISNULL(v.vehicle_type_goods, 0),&#xA;    ISNULL(v.vehicle_type_other, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_turning_left, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_turning_right, 0),&#xA;    ISNULL(v.vehicle_manoeuvre_overtaking, 0),&#xA;    ISNULL(v.vehicle_left_hand_drive_count, 0),&#xA;    ISNULL(v.avg_vehicle_age, 0),&#xA;    ISNULL(v.avg_engine_capacity_cc, 0),&#xA;    ISNULL(v.driver_sex_male, 0), ISNULL(v.driver_sex_female, 0),&#xA;    ISNULL(v.driver_age_band_0_25, 0), ISNULL(v.driver_age_band_26_50, 0),&#xA;    ISNULL(v.driver_age_band_51_plus, 0),&#xA;    ISNULL(v.driver_purpose_commute, 0), ISNULL(v.driver_purpose_education, 0),&#xA;    ISNULL(v.driver_purpose_other, 0),&#xA;    ISNULL(ca.casualty_class_driver, 0), ISNULL(ca.casualty_class_passenger, 0),&#xA;    ISNULL(ca.casualty_class_pedestrian, 0),&#xA;    ISNULL(ca.casualty_severity_fatal, 0), ISNULL(ca.casualty_severity_serious, 0),&#xA;    ISNULL(ca.casualty_severity_slight, 0),&#xA;    ISNULL(ca.casualty_age_band_0_15, 0), ISNULL(ca.casualty_age_band_16_30, 0),&#xA;    ISNULL(ca.casualty_age_band_31_60, 0), ISNULL(ca.casualty_age_band_60_plus, 0)&#xA;&#xA;FROM base_c c&#xA;LEFT JOIN agg_v v ON c.accident_index = v.accident_index&#xA;LEFT JOIN agg_ca ca ON c.accident_index = ca.accident_index;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
+    </DTS:Executable>
+    <DTS:Executable
+      DTS:refId="Package\ETL_tests"
+      DTS:CreationName="STOCK:SEQUENCE"
+      DTS:Description="Sequence Container"
+      DTS:DTSID="{95E10385-DADB-4CE0-A60B-FC2F5F533646}"
+      DTS:ExecutableType="STOCK:SEQUENCE"
+      DTS:LocaleID="-1"
+      DTS:ObjectName="ETL_tests">
+      <DTS:Variables />
+      <DTS:Executables>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_dim_location"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{76750d74-de55-44e5-805b-18f831d4c838}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_dim_location"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @execution_start DATETIME = GETDATE();&#xA;DECLARE @expected INT;&#xA;DECLARE @actual INT;&#xA;DECLARE @result BIT;&#xA;DECLARE @message VARCHAR(500);&#xA;&#xA;-- Zamiast CTE – użyj tymczasowej tabeli&#xA;IF OBJECT_ID('tempdb..#source_locations') IS NOT NULL DROP TABLE #source_locations;&#xA;&#xA;SELECT DISTINCT&#xA;    ROUND(longitude, 4) AS longitude,&#xA;    ROUND(latitude, 4) AS latitude,&#xA;    lsoa_of_accident_location AS lsoav_of_accident_location,&#xA;    local_authority_district,&#xA;    road_type,&#xA;    speed_limit,&#xA;    junction_detail,&#xA;    junction_control,&#xA;    carriageway_hazards,&#xA;    urban_or_rural_area,&#xA;    trunk_road_flag,&#xA;    CAST(first_road_class AS VARCHAR(10)) AS first_road_class,&#xA;    first_road_number,&#xA;    CAST(second_road_class AS VARCHAR(10)) AS second_road_class,&#xA;    second_road_number&#xA;INTO #source_locations&#xA;FROM DWH_Staging.dbo.Stg_Collisions_Enriched&#xA;WHERE&#xA;    longitude IS NOT NULL AND&#xA;    latitude IS NOT NULL AND&#xA;    local_authority_district IS NOT NULL AND&#xA;    road_type IS NOT NULL AND&#xA;    speed_limit IS NOT NULL AND&#xA;    first_road_class IS NOT NULL AND&#xA;    first_road_number IS NOT NULL AND&#xA;    urban_or_rural_area IS NOT NULL AND&#xA;    trunk_road_flag IS NOT NULL;&#xA;&#xA;-- Zlicz rekordy źródłowe&#xA;SET @expected = (SELECT COUNT(*) FROM #source_locations);&#xA;&#xA;-- Zlicz te, które mają dopasowanie w dim_location&#xA;SET @actual = (&#xA;    SELECT COUNT(*)&#xA;    FROM #source_locations s&#xA;    INNER JOIN DWH_RoadSafety.dbo.dim_location d&#xA;        ON ROUND(d.longitude, 4) = s.longitude&#xA;        AND ROUND(d.latitude, 4) = s.latitude&#xA;        AND ISNULL(d.lsoav_of_accident_location, '') = ISNULL(s.lsoav_of_accident_location, '')&#xA;        AND d.local_authority_district = s.local_authority_district&#xA;        AND d.road_type = s.road_type&#xA;        AND d.speed_limit = s.speed_limit&#xA;        AND ISNULL(d.junction_detail, '') = ISNULL(s.junction_detail, '')&#xA;        AND ISNULL(d.junction_control, '') = ISNULL(s.junction_control, '')&#xA;        AND ISNULL(d.carriageway_hazards, '') = ISNULL(s.carriageway_hazards, '')&#xA;        AND d.urban_or_rural_area = s.urban_or_rural_area&#xA;        AND d.trunk_road_flag = s.trunk_road_flag&#xA;        AND d.first_road_class = s.first_road_class&#xA;        AND d.first_road_number = s.first_road_number&#xA;        AND ISNULL(d.second_road_class, '') = ISNULL(s.second_road_class, '')&#xA;        AND ISNULL(d.second_road_number, -1) = ISNULL(s.second_road_number, -1)&#xA;);&#xA;&#xA;-- Sprawdź wynik&#xA;SET @result = IIF(@expected = @actual, 1, 0);&#xA;SET @message = &#xA;    IIF(@result = 1, NULL, CONCAT('Expected: ', @expected, ', Found in dim_location: ', @actual, ', Missing: ', @expected - @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;-- Wpisz wynik do loga&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name,&#xA;    test_description,&#xA;    test_result,&#xA;    expected_value,&#xA;    actual_value,&#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_DimLocation_FullMatch_From_Enriched',&#xA;    'Czy wszystkie lokalizacje z Stg_Collisions_Enriched trafiły do dim_location (pełna zgodność z MERGE)',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_dim_weather"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{d2b8e259-ec0c-4867-83c3-404a5b23f08d}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_dim_weather"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;-- Liczba wszystkich wypadków&#xA;DECLARE @expected INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Collisions_Enriched);&#xA;&#xA;-- Liczba wypadków, które mają dopasowaną pogodę&#xA;DECLARE @actual INT = (&#xA;    SELECT COUNT(*) &#xA;    FROM DWH_Staging.dbo.Stg_Collisions_Enriched e&#xA;    LEFT JOIN DWH_RoadSafety.dbo.dim_weather w&#xA;        ON ROUND(e.longitude, 1) = w.longitude&#xA;        AND ROUND(e.latitude, 1) = w.latitude&#xA;        AND e.date = w.weather_date&#xA;    WHERE w.weather_sk IS NOT NULL&#xA;);&#xA;&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@result = 1, NULL, CONCAT('Expected matches: ', @expected, ', Actual matches: ', @actual, ', Missing: ', @expected - @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_Weather_Assigned_To_Enriched',&#xA;    'Czy dla każdego rekordu z Stg_Collisions_Enriched przypisano pogodę z dim_weather (po lon/lat/dzień)',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_RowCount_Casualties"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{84e9be9b-c760-44f6-aa57-c0136b513484}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_RowCount_Casualties"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @expected INT = ?;&#xA;DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;DECLARE @actual INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Casualties_Raw);&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@expected = @actual, NULL, CONCAT('Expected: ', @expected, ', Actual: ', @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_RowCount_Casualties',&#xA;    'Porównanie liczby rekordów Casualty CSV vs Stg_Casualties_Raw',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="0"
+                SQLTask:DtsVariableName="User::RowCount_Casualty"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="3"
+                SQLTask:ParameterSize="-1" />
+            </SQLTask:SqlTaskData>
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_RowCount_Collisions"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{0E6B55E0-0BBC-4F65-8157-B879C4AF5BCC}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_RowCount_Collisions"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @expected BIGINT = ?;  -- liczba z plików&#xA;DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;DECLARE @actual INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Collisions_Raw);&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@expected = @actual, NULL, CONCAT('Expected: ', @expected, ', Actual: ', @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_RowCount_Collisions',&#xA;    'Porównanie liczby rekordów Collision CSV vs Stg_Collisions_Raw',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="0"
+                SQLTask:DtsVariableName="User::RowCount_Collision"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="3"
+                SQLTask:ParameterSize="-1" />
+            </SQLTask:SqlTaskData>
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_RowCount_Enriched"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{abf2182e-96a2-4963-a946-48289100fb80}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_RowCount_Enriched"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;DECLARE @expected INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Collisions_Raw);&#xA;DECLARE @actual INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Collisions_Enriched);&#xA;&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@expected = @actual, NULL, CONCAT('Expected: ', @expected, ', Actual: ', @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_Enriched_vs_Raw_Collisions',&#xA;    'Sprawdzenie czy liczba rekordów w Stg_Collisions_Enriched = Stg_Collisions_Raw',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_RowCount_fact_collision"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{300f68bf-40c2-4446-9e31-c67a96710626}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_RowCount_fact_collision"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;-- Liczba unikalnych accident_index w stagingu&#xA;DECLARE @expected INT = (&#xA;    SELECT COUNT(DISTINCT accident_index)&#xA;    FROM DWH_Staging.dbo.Stg_Collisions_Raw&#xA;);&#xA;&#xA;-- Liczba tych indeksów, które znajdują się w fact_collision&#xA;DECLARE @actual INT = (&#xA;    SELECT COUNT(DISTINCT s.accident_index)&#xA;    FROM DWH_Staging.dbo.Stg_Collisions_Raw s&#xA;    INNER JOIN DWH_RoadSafety.dbo.fact_collision f&#xA;        ON s.accident_index = f.accident_index&#xA;);&#xA;&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@result = 1, NULL, CONCAT('Expected: ', @expected, ', Found in fact: ', @actual, ', Missing: ', @expected - @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_FactCollision_Contains_Raw_Accidents',&#xA;    'Czy wszystkie accident_index z Stg_Collisions_Raw istnieją w fact_collision',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          </DTS:ObjectData>
+        </DTS:Executable>
+        <DTS:Executable
+          DTS:refId="Package\ETL_tests\Test_RowCount_Vehicles"
+          DTS:CreationName="Microsoft.ExecuteSQLTask"
+          DTS:Description="Execute SQL Task"
+          DTS:DTSID="{a81820ba-e4f5-4768-a5ee-e6bb0a82bf01}"
+          DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+          DTS:LocaleID="-1"
+          DTS:ObjectName="Test_RowCount_Vehicles"
+          DTS:TaskContact="Execute SQL Task; Microsoft Corporation; SQL Server 2022; © 2022 Microsoft Corporation; All Rights Reserved;http://www.microsoft.com/sql/support/default.asp;1"
+          DTS:ThreadHint="0">
+          <DTS:Variables />
+          <DTS:ObjectData>
+            <SQLTask:SqlTaskData
+              SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
+              SQLTask:SqlStatementSource="DECLARE @expected BIGINT = ?;&#xA;DECLARE @execution_start DATETIME = GETDATE();&#xA;&#xA;DECLARE @actual INT = (SELECT COUNT(*) FROM DWH_Staging.dbo.Stg_Vehicles_Raw);&#xA;DECLARE @result BIT = IIF(@expected = @actual, 1, 0);&#xA;DECLARE @message VARCHAR(500) = &#xA;    IIF(@expected = @actual, NULL, CONCAT('Expected: ', @expected, ', Actual: ', @actual));&#xA;&#xA;DECLARE @execution_end DATETIME = GETDATE();&#xA;&#xA;INSERT INTO DWH_TestLog.dbo.etl_test_results (&#xA;    test_name, &#xA;    test_description, &#xA;    test_result, &#xA;    expected_value, &#xA;    actual_value, &#xA;    error_message,&#xA;    execution_start,&#xA;    execution_end&#xA;)&#xA;VALUES (&#xA;    'Test_RowCount_Vehicles',&#xA;    'Porównanie liczby rekordów Vehicle CSV vs Stg_Vehicles_Raw',&#xA;    @result,&#xA;    CAST(@expected AS VARCHAR),&#xA;    CAST(@actual AS VARCHAR),&#xA;    @message,&#xA;    @execution_start,&#xA;    @execution_end&#xA;);&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask">
+              <SQLTask:ParameterBinding
+                SQLTask:ParameterName="0"
+                SQLTask:DtsVariableName="User::RowCount_Vehicle"
+                SQLTask:ParameterDirection="Input"
+                SQLTask:DataType="3"
+                SQLTask:ParameterSize="-1" />
+            </SQLTask:SqlTaskData>
+          </DTS:ObjectData>
+        </DTS:Executable>
+      </DTS:Executables>
+      <DTS:PrecedenceConstraints>
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint]"
+          DTS:CreationName=""
+          DTS:DTSID="{24035069-C628-4A8A-8257-9519E9729C56}"
+          DTS:From="Package\ETL_tests\Test_RowCount_Collisions"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint"
+          DTS:To="Package\ETL_tests\Test_RowCount_Vehicles" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint 1]"
+          DTS:CreationName=""
+          DTS:DTSID="{9BA8F541-635D-4777-BA95-DFC171D10B9F}"
+          DTS:From="Package\ETL_tests\Test_RowCount_Vehicles"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 1"
+          DTS:To="Package\ETL_tests\Test_RowCount_Casualties" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint 2]"
+          DTS:CreationName=""
+          DTS:DTSID="{E3B22E1A-733A-4963-AB28-7E37C2A8D2F5}"
+          DTS:From="Package\ETL_tests\Test_RowCount_Casualties"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 2"
+          DTS:To="Package\ETL_tests\Test_RowCount_Enriched" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint 3]"
+          DTS:CreationName=""
+          DTS:DTSID="{2334029C-7C5E-4764-AE77-9C129B16464D}"
+          DTS:From="Package\ETL_tests\Test_dim_location"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 3"
+          DTS:To="Package\ETL_tests\Test_dim_weather" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint 4]"
+          DTS:CreationName=""
+          DTS:DTSID="{98FA8216-0ABE-4919-AE0E-35629B7C3031}"
+          DTS:From="Package\ETL_tests\Test_RowCount_Enriched"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 4"
+          DTS:To="Package\ETL_tests\Test_dim_location" />
+        <DTS:PrecedenceConstraint
+          DTS:refId="Package\ETL_tests.PrecedenceConstraints[Constraint 5]"
+          DTS:CreationName=""
+          DTS:DTSID="{3B9CFAC4-382E-40A1-8E5B-C4E4A52FCCCE}"
+          DTS:From="Package\ETL_tests\Test_dim_weather"
+          DTS:LogicalAnd="True"
+          DTS:ObjectName="Constraint 5"
+          DTS:To="Package\ETL_tests\Test_RowCount_fact_collision" />
+      </DTS:PrecedenceConstraints>
     </DTS:Executable>
     <DTS:Executable
       DTS:refId="Package\FillWeather"
@@ -1058,7 +1304,7 @@
       <DTS:ObjectData>
         <SQLTask:SqlTaskData
           SQLTask:Connection="{A0E6510E-B541-467A-A15F-172D6FB5D454}"
-          SQLTask:SqlStatementSource="-- Set prcp to 0 only where prcp is NULL" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
+          SQLTask:SqlStatementSource="UPDATE dbo.Stg_Weather&#xA;SET &#xA;    prcp = 0&#xA;WHERE prcp IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    snow = 0&#xA;WHERE snow IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    tsun = 0&#xA;WHERE tsun IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    wpgt = 0&#xA;WHERE wpgt IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    wdir = 0&#xA;WHERE wdir IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    wspd = 0&#xA;WHERE wspd IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    pres = 0&#xA;WHERE pres IS NULL;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    tmin = 0&#xA;WHERE tmin IS NULL&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    tmax = 0&#xA;WHERE tmax IS NULL;;&#xA;&#xA;UPDATE dbo.Stg_Weather&#xA;SET &#xA;    tavg = 0&#xA;WHERE tavg IS NULL;&#xA;" xmlns:SQLTask="www.microsoft.com/sqlserver/dts/tasks/sqltask" />
       </DTS:ObjectData>
     </DTS:Executable>
     <DTS:Executable
@@ -5461,7 +5707,7 @@
               VSTAMinorVersion="0"
               Language="CSharp"
               ReadOnlyVariables="User::BaseFolder, User::CurrentYear"
-              ReadWriteVariables="User::CollisionPath, User::VehiclePath, User::CasualtyPath">
+              ReadWriteVariables="User::CasualtyPath,User::CollisionPath,User::RowCount_Casualty,User::RowCount_Collision,User::RowCount_Vehicle,User::VehiclePath">
               <ProjectItem
                 Name="Properties\Resources.resx"
                 Encoding="UTF8"><![CDATA[<?xml version="1.0" encoding="utf-8"?>
@@ -5625,11 +5871,11 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ST_1bc92da8a59c4e8d8ddbaaa7d7627357</RootNamespace>
     <AssemblyName>ST_1bc92da8a59c4e8d8ddbaaa7d7627357</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ResolveAssemblyReferenceIgnoreTargetFrameworkAttributeVersionMismatch>true</ResolveAssemblyReferenceIgnoreTargetFrameworkAttributeVersionMismatch>
+    <TargetFrameworkProfile></TargetFrameworkProfile>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -5640,7 +5886,6 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
@@ -5650,7 +5895,6 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -5659,51 +5903,40 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
     <Reference Include="Microsoft.SqlServer.ManagedDTS, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91" />
     <Reference Include="Microsoft.SqlServer.ScriptTask, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91" />
   </ItemGroup>
-
   <ItemGroup>
     <AppDesigner Include="Properties\" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
-         <Generator>ResXFileCodeGenerator</Generator>
-         <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
-             <AutoGen>True</AutoGen>
-         <DependentUpon>Resources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <None Include="Properties\Settings.settings">
-         <Generator>SettingsSingleFileGenerator</Generator>
-         <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
-         <AutoGen>True</AutoGen>
-         <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="ScriptMain.cs">
-         <SubType>Code</SubType>
+      <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
-
   <!-- Include the build rules for a C# project.-->
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{30D016F9-3734-4E33-A861-5E7D899E18F3}">
-        <ProjectProperties HostName="ScriptTask"
-                           HostPackage="{B3A685AA-7EAF-4BC6-9940-57959FA5AC07}"
-                           ApplicationType="usd"
-                           Language="cs"
-                           TemplatesPath=""
-                           DebugInfoCommandLine=""
-                           DebugInfoWorkingDir=""
-                           IconImageList=""/>
-        <Host Name="ScriptTask" GeneratedNamespace="$safeprojectname" IconIndex="">
-        </Host>
+        <ProjectProperties HostName="ScriptTask" HostPackage="{B3A685AA-7EAF-4BC6-9940-57959FA5AC07}" ApplicationType="usd" Language="cs" TemplatesPath="" DebugInfoCommandLine="" DebugInfoWorkingDir="" IconImageList="" />
+        <Host Name="ScriptTask" GeneratedNamespace="$safeprojectname" IconIndex=""></Host>
         <ProjectClient>
-            <HostIdentifier>SSIS_ST160</HostIdentifier>
+          <HostIdentifier>SSIS_ST160</HostIdentifier>
         </ProjectClient>
       </FlavorProperties>
     </VisualStudio>
@@ -5721,9 +5954,10 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
 
 
 #region Namespaces
+using Microsoft.SqlServer.Dts.Runtime;
 using System;
 using System.Data;
-using Microsoft.SqlServer.Dts.Runtime;
+using System.Linq;
 using System.Windows.Forms;
 #endregion
 
@@ -5796,25 +6030,113 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357
         #endregion
 
 
-		/// <summary>
+        /// <summary>
         /// This method is called when this script task executes in the control flow.
         /// Before returning from this method, set the value of Dts.TaskResult to indicate success or failure.
         /// To open Help, press F1.
         /// </summary>
-		public void Main()
-		{
-            // TODO: Add your code here
+        //public void Main()
+        //{
+        //          // TODO: Add your code here
+        //          string baseFolder = Dts.Variables["User::BaseFolder"].Value.ToString();
+        //          string year = Dts.Variables["User::CurrentYear"].Value.ToString();
+
+        //          Dts.Variables["User::CollisionPath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-collision-{year}.csv";
+        //          Dts.Variables["User::VehiclePath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-vehicle-{year}.csv";
+        //          Dts.Variables["User::CasualtyPath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-casualty-{year}.csv";
+
+        //          Dts.TaskResult = (int)ScriptResults.Success;
+
+        //          Dts.TaskResult = (int)ScriptResults.Success;
+        //}
+        //public void Main()
+        //{
+        //    string baseFolder = Dts.Variables["User::BaseFolder"].Value.ToString();
+        //    string year = Dts.Variables["User::CurrentYear"].Value.ToString();
+
+        //    string collisionPath = $@"{baseFolder}{year}\dft-road-casualty-statistics-collision-{year}.csv";
+        //    string vehiclePath = $@"{baseFolder}{year}\dft-road-casualty-statistics-vehicle-{year}.csv";
+        //    string casualtyPath = $@"{baseFolder}{year}\dft-road-casualty-statistics-casualty-{year}.csv";
+
+        //    Dts.Variables["User::CollisionPath"].Value = collisionPath;
+        //    Dts.Variables["User::VehiclePath"].Value = vehiclePath;
+        //    Dts.Variables["User::CasualtyPath"].Value = casualtyPath;
+
+        //    // Liczenie linii z pominięciem nagłówka
+        //    int collisionCount = System.IO.File.ReadLines(collisionPath).Skip(1).Count();
+        //    int vehicleCount = System.IO.File.ReadLines(vehiclePath).Skip(1).Count();
+        //    int casualtyCount = System.IO.File.ReadLines(casualtyPath).Skip(1).Count();
+
+        //    // Dodaj do istniejącej sumy (z poprzednich iteracji lat)
+        //    Dts.Variables["User::RowCount_Collision"].Value =
+        //        (int)Dts.Variables["User::RowCount_Collision"].Value + collisionCount;
+
+        //    Dts.Variables["User::RowCount_Vehicle"].Value =
+        //        (int)Dts.Variables["User::RowCount_Vehicle"].Value + vehicleCount;
+
+        //    Dts.Variables["User::RowCount_Casualty"].Value =
+        //        (int)Dts.Variables["User::RowCount_Casualty"].Value + casualtyCount;
+
+        //    Dts.TaskResult = (int)ScriptResults.Success;
+        //}
+
+        public void Main()
+        {
             string baseFolder = Dts.Variables["User::BaseFolder"].Value.ToString();
             string year = Dts.Variables["User::CurrentYear"].Value.ToString();
 
-            Dts.Variables["User::CollisionPath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-collision-{year}.csv";
-            Dts.Variables["User::VehiclePath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-vehicle-{year}.csv";
-            Dts.Variables["User::CasualtyPath"].Value = $@"{baseFolder}{year}\dft-road-casualty-statistics-casualty-{year}.csv";
+            string collisionPath = $@"{baseFolder}{year}\dft-road-casualty-statistics-collision-{year}.csv";
+            string vehiclePath = $@"{baseFolder}{year}\dft-road-casualty-statistics-vehicle-{year}.csv";
+            string casualtyPath = $@"{baseFolder}{year}\dft-road-casualty-statistics-casualty-{year}.csv";
 
-            Dts.TaskResult = (int)ScriptResults.Success;
+            Dts.Variables["User::CollisionPath"].Value = collisionPath;
+            Dts.Variables["User::VehiclePath"].Value = vehiclePath;
+            Dts.Variables["User::CasualtyPath"].Value = casualtyPath;
 
-            Dts.TaskResult = (int)ScriptResults.Success;
-		}
+            try
+            {
+                int collisionCount = CountLines(collisionPath);
+                int vehicleCount = CountLines(vehiclePath);
+                int casualtyCount = CountLines(casualtyPath);
+
+                Dts.Variables["User::RowCount_Collision"].Value =
+                    Convert.ToInt64(Dts.Variables["User::RowCount_Collision"].Value) + collisionCount;
+
+                Dts.Variables["User::RowCount_Vehicle"].Value =
+                    Convert.ToInt64(Dts.Variables["User::RowCount_Vehicle"].Value) + vehicleCount;
+
+                Dts.Variables["User::RowCount_Casualty"].Value =
+                    Convert.ToInt64(Dts.Variables["User::RowCount_Casualty"].Value) + casualtyCount;
+
+                bool fireAgain = false;
+                Dts.Events.FireInformation(0, "RowCount", $"Zliczono: {collisionCount} collision, {vehicleCount} vehicle, {casualtyCount} casualty", "", 0, ref fireAgain);
+
+                Dts.TaskResult = (int)ScriptResults.Success;
+            }
+            catch (Exception ex)
+            {
+                Dts.Events.FireError(0, "Script Task", ex.Message, "", 0);
+                Dts.TaskResult = (int)ScriptResults.Failure;
+            }
+        }
+
+        private int CountLines(string path)
+        {
+            if (!System.IO.File.Exists(path))
+                throw new Exception("Plik nie istnieje: " + path);
+
+            int count = 0;
+            using (var reader = new System.IO.StreamReader(path))
+            {
+                reader.ReadLine(); // Pomijamy nagłówek
+                while (reader.ReadLine() != null)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
 
         #region ScriptResults declaration
         /// <summary>
@@ -5835,12 +6157,12 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357
               <ProjectItem
                 Name="Project"
                 Encoding="UTF16LE"><![CDATA[<?xml version="1.0" encoding="UTF-16" standalone="yes"?>
-<c:Project xmlns:c="http://schemas.microsoft.com/codeprojectml/2010/08/main" xmlns:msb="http://schemas.microsoft.com/developer/msbuild/2003" runtimeVersion="3.0" schemaVersion="1.0">
+<c:Project xmlns:c="http://schemas.microsoft.com/codeprojectml/2010/08/main" xmlns:msb="http://schemas.microsoft.com/developer/msbuild/2003" runtimeVersion="4.0" schemaVersion="1.0">
   <msb:PropertyGroup>
-    <msb:Language>msBuild</msb:Language>
     <msb:CodeName>ST_1bc92da8a59c4e8d8ddbaaa7d7627357</msb:CodeName>
+    <msb:Language>msBuild</msb:Language>
     <msb:DisplayName>ST_1bc92da8a59c4e8d8ddbaaa7d7627357</msb:DisplayName>
-    <msb:ProjectId>{74F4BF4B-490C-4484-B3DA-CB536F716F39}</msb:ProjectId>
+    <msb:ProjectId>{EA5700D1-451D-4139-A97B-136BA3A94592}</msb:ProjectId>
   </msb:PropertyGroup>
   <msb:ItemGroup>
     <msb:Project Include="ST_1bc92da8a59c4e8d8ddbaaa7d7627357.csproj" />
@@ -5962,87 +6284,139 @@ namespace ST_1bc92da8a59c4e8d8ddbaaa7d7627357.Properties {
               <BinaryItem
                 Name="ST_1bc92da8a59c4e8d8ddbaaa7d7627357.dll">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
-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
+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
-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
+ABAAAAAAEAAAEAAAAAAAABAAAAAAAAAAAAAAAKg0AABPAAAAAEAAAHgEAAAAAAAAAAAAAAAAAAAA
 AAAAAGAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-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
-cQAgBSAAwQABBSUAyQCnAyoA0QDSAjAAiQAGAzQA2QA2BTgA0QDcAj4AwQBQBQEAcQAvBAYAiQAv
-BAYA4QCJAEMA4QBfBUoAkQAvBE8AsQAvBAYACAAUAGgACAAYAG0AKQBzANUALgALAK0ALgATALYA
-LgAbANUALgAjAN4ALgArAAcBLgAzAAcBLgA7AAcBLgBDAN4ALgBLAA0BLgBTAAcBLgBbACQBQwBj
-AG0ASQBzANUAYQB7AG0AYwBrAG0AGwADAAEABAADAAAAHwSeAAAA6ACjAAAASAWoAAIABAADAAIA
-BQAFAAEABgAFAAIABwAHAASAAAABAAAAOyQtgAAAAAAAAAEAAAAEAAAAAAAAAAAAAABWAFUAAAAA
-ABAAAAAAAAAAAAAAAF8ADwMAAAAABAAAAAAAAAAAAAAAVgCwAwAAAAAQAAAAAAAAAAAAAABfAC4A
-AAAAAAAAAAABAAAAgAQAAAUAAgAAAAAAAFNUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRiYWFhN2Q3NjI3
-MzU3ADxNb2R1bGU+AE1pY3Jvc29mdC5TcWxTZXJ2ZXIuTWFuYWdlZERUUwB2YWx1ZV9fAG1zY29y
-bGliAGRlZmF1bHRJbnN0YW5jZQBWYXJpYWJsZQBSdW50aW1lVHlwZUhhbmRsZQBHZXRUeXBlRnJv
-bUhhbmRsZQBNaWNyb3NvZnQuU3FsU2VydmVyLkR0cy5SdW50aW1lAFR5cGUARmFpbHVyZQBnZXRf
-Q3VsdHVyZQBzZXRfQ3VsdHVyZQByZXNvdXJjZUN1bHR1cmUAVlNUQVJUU2NyaXB0T2JqZWN0TW9k
-ZWxCYXNlAEFwcGxpY2F0aW9uU2V0dGluZ3NCYXNlAEVkaXRvckJyb3dzYWJsZVN0YXRlAENvbXBp
-bGVyR2VuZXJhdGVkQXR0cmlidXRlAERlYnVnZ2VyTm9uVXNlckNvZGVBdHRyaWJ1dGUARGVidWdn
-YWJsZUF0dHJpYnV0ZQBFZGl0b3JCcm93c2FibGVBdHRyaWJ1dGUAQXNzZW1ibHlUaXRsZUF0dHJp
-YnV0ZQBBc3NlbWJseVRyYWRlbWFya0F0dHJpYnV0ZQBUYXJnZXRGcmFtZXdvcmtBdHRyaWJ1dGUA
-QXNzZW1ibHlDb25maWd1cmF0aW9uQXR0cmlidXRlAEFzc2VtYmx5RGVzY3JpcHRpb25BdHRyaWJ1
-dGUAQ29tcGlsYXRpb25SZWxheGF0aW9uc0F0dHJpYnV0ZQBBc3NlbWJseVByb2R1Y3RBdHRyaWJ1
-dGUAQXNzZW1ibHlDb3B5cmlnaHRBdHRyaWJ1dGUAU1NJU1NjcmlwdFRhc2tFbnRyeVBvaW50QXR0
-cmlidXRlAEFzc2VtYmx5Q29tcGFueUF0dHJpYnV0ZQBSdW50aW1lQ29tcGF0aWJpbGl0eUF0dHJp
-YnV0ZQBnZXRfVmFsdWUAc2V0X1ZhbHVlAHZhbHVlAFN5c3RlbS5SdW50aW1lLlZlcnNpb25pbmcA
-VG9TdHJpbmcATWljcm9zb2Z0LlNxbFNlcnZlci5TY3JpcHRUYXNrAE1pY3Jvc29mdC5TcWxTZXJ2
-ZXIuRHRzLlRhc2tzLlNjcmlwdFRhc2sAU2NyaXB0T2JqZWN0TW9kZWwAU3lzdGVtLkNvbXBvbmVu
-dE1vZGVsAFNUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRiYWFhN2Q3NjI3MzU3LmRsbABnZXRfSXRlbQBT
-eXN0ZW0ARW51bQByZXNvdXJjZU1hbgBTY3JpcHRNYWluAFN5c3RlbS5Db25maWd1cmF0aW9uAFN5
-c3RlbS5HbG9iYWxpemF0aW9uAFN5c3RlbS5SZWZsZWN0aW9uAEN1bHR1cmVJbmZvAGdldF9SZXNv
-dXJjZU1hbmFnZXIALmN0b3IALmNjdG9yAFN5c3RlbS5EaWFnbm9zdGljcwBTeXN0ZW0uUnVudGlt
-ZS5Db21waWxlclNlcnZpY2VzAFN5c3RlbS5SZXNvdXJjZXMAU1RfMWJjOTJkYThhNTljNGU4ZDhk
-ZGJhYWE3ZDc2MjczNTcuUHJvcGVydGllcy5SZXNvdXJjZXMucmVzb3VyY2VzAERlYnVnZ2luZ01v
-ZGVzAFNUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRiYWFhN2Q3NjI3MzU3LlByb3BlcnRpZXMAZ2V0X1Zh
-cmlhYmxlcwBTZXR0aW5ncwBTdWNjZXNzAGdldF9EdHMAU2NyaXB0UmVzdWx0cwBDb25jYXQAT2Jq
-ZWN0AGdldF9EZWZhdWx0AHNldF9UYXNrUmVzdWx0AGdldF9Bc3NlbWJseQAAIVUAcwBlAHIAOgA6
-AEIAYQBzAGUARgBvAGwAZABlAHIAACNVAHMAZQByADoAOgBDAHUAcgByAGUAbgB0AFkAZQBhAHIA
-ACdVAHMAZQByADoAOgBDAG8AbABsAGkAcwBpAG8AbgBQAGEAdABoAABRXABkAGYAdAAtAHIAbwBh
-AGQALQBjAGEAcwB1AGEAbAB0AHkALQBzAHQAYQB0AGkAcwB0AGkAYwBzAC0AYwBvAGwAbABpAHMA
-aQBvAG4ALQABCS4AYwBzAHYAACNVAHMAZQByADoAOgBWAGUAaABpAGMAbABlAFAAYQB0AGgAAE1c
-AGQAZgB0AC0AcgBvAGEAZAAtAGMAYQBzAHUAYQBsAHQAeQAtAHMAdABhAHQAaQBzAHQAaQBjAHMA
-LQB2AGUAaABpAGMAbABlAC0AASVVAHMAZQByADoAOgBDAGEAcwB1AGEAbAB0AHkAUABhAHQAaAAA
-T1wAZABmAHQALQByAG8AYQBkAC0AYwBhAHMAdQBhAGwAdAB5AC0AcwB0AGEAdABpAHMAdABpAGMA
-cwAtAGMAYQBzAHUAYQBsAHQAeQAtAAFxUwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5AGMANABl
-ADgAZAA4AGQAZABiAGEAYQBhADcAZAA3ADYAMgA3ADMANQA3AC4AUAByAG8AcABlAHIAdABpAGUA
-cwAuAFIAZQBzAG8AdQByAGMAZQBzAAAAAAANaJaJhXBbRZ8e2Uf2RjjtAAQgAQEIAyAAAQUgAQER
-EQQgAQEOBSABARFRBAcCDg4EIAASYQQgABJlBSABEmkcAyAAHAMgAA4FAAEOHQ4EIAEBHAYAARJx
-EXUEIAASeQYgAgEOEnkIt3pcVhk04IkIiYRdzYCAzJEEAAAAAAQBAAAAAwYSSQMGEk0DBhIQAgYI
-AwYRFAQAABJJBAAAEk0FAAEBEk0EAAASEAMAAAEECAASSQQIABJNBAgAEhAIAQAIAAAAAAAeAQAB
-AFQCFldyYXBOb25FeGNlcHRpb25UaHJvd3MBCAEAAgAAAAAAKAEAI1NUXzFiYzkyZGE4YTU5YzRl
-OGQ4ZGRiYWFhN2Q3NjI3MzU3AAAFAQAAAAAWAQARQ29weXJpZ2h0IEAgIDIwMjUAAE0BABwuTkVU
-RnJhbWV3b3JrLFZlcnNpb249djQuNy4yAQBUDhRGcmFtZXdvcmtEaXNwbGF5TmFtZRQuTkVUIEZy
-YW1ld29yayA0LjcuMgAAtAAAAM7K774BAAAAkQAAAGxTeXN0ZW0uUmVzb3VyY2VzLlJlc291cmNl
-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
+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
+AJsA+wMGAPkA+wMGAKcA+wMGACoGWAQAAAAAMwAAAAAAAQABAAEAEAATBA8AOQABAAEAAAAQABEF
+bQVNAAEABAAAARAAtQVtBWEAAwAIAAMBAADOBQAARQAEAAsAEQAHBLcAEQAeAbsAEQB2AL8ABgZl
+AMMAVoC+BcYAVoD+AMYAUCAAAAAAhgAZBAYAAQDoIgAAAACBAKoFygABAEwjAAAAAIYYygQGAAIA
+VCMAAAAAgxjKBAYAAgBcIwAAAACTCJgEzwACAIgjAAAAAJMIBgHUAAIAjyMAAAAAkwgSAdkAAgCX
+IwAAAACWCAMG3wADAJ4jAAAAAIYYygQGAAMApiMAAAAAkRjQBOQAAwAAAAEAVQMAAAEALAMJAMoE
+AQARAMoEBgAZAMoECgApAMoEEAAxAMoEEAA5AMoEEABBAMoEEABJAMoEEABRAMoEEABZAMoEEABh
+AMoEEABpAMoEBgCRAMoEBgC5AMoEFQDJAMoEBgBxAMYFKQDRAJwFLgDZAPIDMwDhABgDOQCZAEwD
+PQDpAO4FQQDhACIDRwDxAAcATADRANwFUQDpAPUFVwABAR4EXwDRAA8GAQB5AIYAPQABAcAEagAR
+AecFeQDpAO4FfgB5AMoEEACBAMoEEAAZAfAAPQAhAWIBBgBxAMoEBgCZAMoEBgApAbkAhAApASYG
+jQChAMoEkwDBAMoEBgAIABQArQAIABgAsgApAHMAHwEuAAsA9wAuABMAAAEuABsAHwEuACMAKAEu
+ACsAUQEuADMAUQEuADsAUQEuAEMAKAEuAEsAVwEuAFMAUQEuAFsAbgFDAGMAsgBJAHMAHwFhAHsA
+sgBjAGsAsgAbAHMAAwABAAQAAwAAAJwE6AAAACYB7QAAAAcG8gACAAUAAwACAAYABQABAAcABQAC
+AAgABwAEgAAAAQAAAEkk8X4AAAAAAAAPAAAABAAAAAAAAAAAAAAAmwBtAAAAAAAQAAAAAAAAAAAA
+AACkAFoDAAAAAAQAAAAAAAAAAAAAAJsA+wMAAAAAEAAAAAAAAAAAAAAApABGAAAAAAAAAAAAAQAA
+ABsFAAAFAAIAAAAAAABJbnQzMgBUb0ludDY0AFNUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRiYWFhN2Q3
+NjI3MzU3ADxNb2R1bGU+AFN5c3RlbS5JTwBNaWNyb3NvZnQuU3FsU2VydmVyLk1hbmFnZWREVFMA
+dmFsdWVfXwBtc2NvcmxpYgBkZWZhdWx0SW5zdGFuY2UAZ2V0X01lc3NhZ2UAVmFyaWFibGUASURp
+c3Bvc2FibGUAUnVudGltZVR5cGVIYW5kbGUAR2V0VHlwZUZyb21IYW5kbGUARmlsZQBNaWNyb3Nv
+ZnQuU3FsU2VydmVyLkR0cy5SdW50aW1lAFJlYWRMaW5lAFR5cGUARmFpbHVyZQBnZXRfQ3VsdHVy
+ZQBzZXRfQ3VsdHVyZQByZXNvdXJjZUN1bHR1cmUAVlNUQVJUU2NyaXB0T2JqZWN0TW9kZWxCYXNl
+AEFwcGxpY2F0aW9uU2V0dGluZ3NCYXNlAERpc3Bvc2UARWRpdG9yQnJvd3NhYmxlU3RhdGUAQ29t
+cGlsZXJHZW5lcmF0ZWRBdHRyaWJ1dGUARGVidWdnZXJOb25Vc2VyQ29kZUF0dHJpYnV0ZQBEZWJ1
+Z2dhYmxlQXR0cmlidXRlAEVkaXRvckJyb3dzYWJsZUF0dHJpYnV0ZQBBc3NlbWJseVRpdGxlQXR0
+cmlidXRlAEFzc2VtYmx5VHJhZGVtYXJrQXR0cmlidXRlAFRhcmdldEZyYW1ld29ya0F0dHJpYnV0
+ZQBBc3NlbWJseUNvbmZpZ3VyYXRpb25BdHRyaWJ1dGUAQXNzZW1ibHlEZXNjcmlwdGlvbkF0dHJp
+YnV0ZQBDb21waWxhdGlvblJlbGF4YXRpb25zQXR0cmlidXRlAEFzc2VtYmx5UHJvZHVjdEF0dHJp
+YnV0ZQBBc3NlbWJseUNvcHlyaWdodEF0dHJpYnV0ZQBTU0lTU2NyaXB0VGFza0VudHJ5UG9pbnRB
+dHRyaWJ1dGUAQXNzZW1ibHlDb21wYW55QXR0cmlidXRlAFJ1bnRpbWVDb21wYXRpYmlsaXR5QXR0
+cmlidXRlAGdldF9WYWx1ZQBzZXRfVmFsdWUAdmFsdWUAU3lzdGVtLlJ1bnRpbWUuVmVyc2lvbmlu
+ZwBUb1N0cmluZwBwYXRoAE1pY3Jvc29mdC5TcWxTZXJ2ZXIuU2NyaXB0VGFzawBNaWNyb3NvZnQu
+U3FsU2VydmVyLkR0cy5UYXNrcy5TY3JpcHRUYXNrAFNjcmlwdE9iamVjdE1vZGVsAFN5c3RlbS5D
+b21wb25lbnRNb2RlbABTVF8xYmM5MmRhOGE1OWM0ZThkOGRkYmFhYTdkNzYyNzM1Ny5kbGwAZ2V0
+X0l0ZW0AU3lzdGVtAEVudW0AcmVzb3VyY2VNYW4AU2NyaXB0TWFpbgBGaXJlSW5mb3JtYXRpb24A
+U3lzdGVtLkNvbmZpZ3VyYXRpb24AU3lzdGVtLkdsb2JhbGl6YXRpb24AU3lzdGVtLlJlZmxlY3Rp
+b24ARXhjZXB0aW9uAEN1bHR1cmVJbmZvAFN0cmVhbVJlYWRlcgBUZXh0UmVhZGVyAGdldF9SZXNv
+dXJjZU1hbmFnZXIARXZlbnRzT2JqZWN0V3JhcHBlcgBGaXJlRXJyb3IALmN0b3IALmNjdG9yAFN5
+c3RlbS5EaWFnbm9zdGljcwBTeXN0ZW0uUnVudGltZS5Db21waWxlclNlcnZpY2VzAFN5c3RlbS5S
+ZXNvdXJjZXMAU1RfMWJjOTJkYThhNTljNGU4ZDhkZGJhYWE3ZDc2MjczNTcuUHJvcGVydGllcy5S
+ZXNvdXJjZXMucmVzb3VyY2VzAERlYnVnZ2luZ01vZGVzAFNUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRi
+YWFhN2Q3NjI3MzU3LlByb3BlcnRpZXMAZ2V0X1ZhcmlhYmxlcwBDb3VudExpbmVzAFNldHRpbmdz
+AFN1Y2Nlc3MAZ2V0X0R0cwBTY3JpcHRSZXN1bHRzAGdldF9FdmVudHMARXhpc3RzAENvbmNhdABG
+b3JtYXQAT2JqZWN0AGdldF9EZWZhdWx0AHNldF9UYXNrUmVzdWx0AENvbnZlcnQAZ2V0X0Fzc2Vt
+Ymx5AAAAIVUAcwBlAHIAOgA6AEIAYQBzAGUARgBvAGwAZABlAHIAACNVAHMAZQByADoAOgBDAHUA
+cgByAGUAbgB0AFkAZQBhAHIAAFFcAGQAZgB0AC0AcgBvAGEAZAAtAGMAYQBzAHUAYQBsAHQAeQAt
+AHMAdABhAHQAaQBzAHQAaQBjAHMALQBjAG8AbABsAGkAcwBpAG8AbgAtAAEJLgBjAHMAdgAATVwA
+ZABmAHQALQByAG8AYQBkAC0AYwBhAHMAdQBhAGwAdAB5AC0AcwB0AGEAdABpAHMAdABpAGMAcwAt
+AHYAZQBoAGkAYwBsAGUALQABT1wAZABmAHQALQByAG8AYQBkAC0AYwBhAHMAdQBhAGwAdAB5AC0A
+cwB0AGEAdABpAHMAdABpAGMAcwAtAGMAYQBzAHUAYQBsAHQAeQAtAAEnVQBzAGUAcgA6ADoAQwBv
+AGwAbABpAHMAaQBvAG4AUABhAHQAaAAAI1UAcwBlAHIAOgA6AFYAZQBoAGkAYwBsAGUAUABhAHQA
+aAAAJVUAcwBlAHIAOgA6AEMAYQBzAHUAYQBsAHQAeQBQAGEAdABoAAAxVQBzAGUAcgA6ADoAUgBv
+AHcAQwBvAHUAbgB0AF8AQwBvAGwAbABpAHMAaQBvAG4AAC1VAHMAZQByADoAOgBSAG8AdwBDAG8A
+dQBuAHQAXwBWAGUAaABpAGMAbABlAAAvVQBzAGUAcgA6ADoAUgBvAHcAQwBvAHUAbgB0AF8AQwBh
+AHMAdQBhAGwAdAB5AAARUgBvAHcAQwBvAHUAbgB0AABlWgBsAGkAYwB6AG8AbgBvADoAIAB7ADAA
+fQAgAGMAbwBsAGwAaQBzAGkAbwBuACwAIAB7ADEAfQAgAHYAZQBoAGkAYwBsAGUALAAgAHsAMgB9
+ACAAYwBhAHMAdQBhAGwAdAB5AAABABdTAGMAcgBpAHAAdAAgAFQAYQBzAGsAACdQAGwAaQBrACAA
+bgBpAGUAIABpAHMAdABuAGkAZQBqAGUAOgAgAABxUwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5
+AGMANABlADgAZAA4AGQAZABiAGEAYQBhADcAZAA3ADYAMgA3ADMANQA3AC4AUAByAG8AcABlAHIA
+dABpAGUAcwAuAFIAZQBzAG8AdQByAGMAZQBzAAAAFUAwCsiZH0iejk9RLQFYbAAEIAEBCAMgAAEF
+IAEBEREEIAEBDgUgAQERWQ0HCg4ODg4OCAgIAhI9BCAAEmkEIAASbQUgARJxHAMgABwDIAAOBQAB
+Dh0OBCABARwEAAEKHAUgABKAgQcABA4OHBwcCiAGAQgODg4IEAIIIAUCCA4ODggFBwIIEkEEAAEC
+DgUAAg4ODggAARKAlRGAmQUgABKAnQcgAgEOEoCdCLd6XFYZNOCJCImEXc2AgMyRBAAAAAAEAQAA
+AAMGElEDBhJVAwYSEAIGCAMGERQEIAEIDgQAABJRBAAAElUFAAEBElUEAAASEAMAAAEECAASUQQI
+ABJVBAgAEhAIAQAIAAAAAAAeAQABAFQCFldyYXBOb25FeGNlcHRpb25UaHJvd3MBCAEAAgAAAAAA
+KAEAI1NUXzFiYzkyZGE4YTU5YzRlOGQ4ZGRiYWFhN2Q3NjI3MzU3AAAFAQAAAAAWAQARQ29weXJp
+Z2h0IEAgIDIwMjUAAEkBABouTkVURnJhbWV3b3JrLFZlcnNpb249djQuNwEAVA4URnJhbWV3b3Jr
+RGlzcGxheU5hbWUSLk5FVCBGcmFtZXdvcmsgNC43tAAAAM7K774BAAAAkQAAAGxTeXN0ZW0uUmVz
+b3VyY2VzLlJlc291cmNlUmVhZGVyLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJl
+PW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkjU3lzdGVtLlJlc291cmNl
+cy5SdW50aW1lUmVzb3VyY2VTZXQCAAAAAAAAAAAAAABQQURQQURQtAAAANA0AAAAAAAAAAAAAOo0
+AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAADcNAAAAAAAAAAAAAAAAF9Db3JEbGxNYWluAG1zY29y
+ZWUuZGxsAAAAAAD/JQAgABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAABABAAAAAYAACAAAAAAAAAAAAAAAAAAAABAAEAAAAwAACAAAAAAAAAAAAAAAAAAAABAAAAAABI
+AAAAWEAAABoEAAAAAAAAAAAAABoENAAAAFYAUwBfAFYARQBSAFMASQBPAE4AXwBJAE4ARgBPAAAA
+AAC9BO/+AAABAAAAAQDxfkkkAAABAPF+SSQ/AAAAAAAAAAQAAAACAAAAAAAAAAAAAAAAAAAARAAA
+AAEAVgBhAHIARgBpAGwAZQBJAG4AZgBvAAAAAAAkAAQAAABUAHIAYQBuAHMAbABhAHQAaQBvAG4A
+AAAAAAAAsAR6AwAAAQBTAHQAcgBpAG4AZwBGAGkAbABlAEkAbgBmAG8AAABWAwAAAQAwADAAMAAw
+ADAANABiADAAAAAaAAEAAQBDAG8AbQBtAGUAbgB0AHMAAAAAAAAAIgABAAEAQwBvAG0AcABhAG4A
+eQBOAGEAbQBlAAAAAAAAAAAAcAAkAAEARgBpAGwAZQBEAGUAcwBjAHIAaQBwAHQAaQBvAG4AAAAA
+AFMAVABfADEAYgBjADkAMgBkAGEAOABhADUAOQBjADQAZQA4AGQAOABkAGQAYgBhAGEAYQA3AGQA
+NwA2ADIANwAzADUANwAAAD4ADwABAEYAaQBsAGUAVgBlAHIAcwBpAG8AbgAAAAAAMQAuADAALgA5
+ADIAOAA5AC4AMwAyADQAOQA3AAAAAABwACgAAQBJAG4AdABlAHIAbgBhAGwATgBhAG0AZQAAAFMA
+VABfADEAYgBjADkAMgBkAGEAOABhADUAOQBjADQAZQA4AGQAOABkAGQAYgBhAGEAYQA3AGQANwA2
+ADIANwAzADUANwAuAGQAbABsAAAASAASAAEATABlAGcAYQBsAEMAbwBwAHkAcgBpAGcAaAB0AAAA
+QwBvAHAAeQByAGkAZwBoAHQAIABAACAAIAAyADAAMgA1AAAAKgABAAEATABlAGcAYQBsAFQAcgBh
+AGQAZQBtAGEAcgBrAHMAAAAAAAAAAAB4ACgAAQBPAHIAaQBnAGkAbgBhAGwARgBpAGwAZQBuAGEA
+bQBlAAAAUwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5AGMANABlADgAZAA4AGQAZABiAGEAYQBh
+ADcAZAA3ADYAMgA3ADMANQA3AC4AZABsAGwAAABoACQAAQBQAHIAbwBkAHUAYwB0AE4AYQBtAGUA
+AAAAAFMAVABfADEAYgBjADkAMgBkAGEAOABhADUAOQBjADQAZQA4AGQAOABkAGQAYgBhAGEAYQA3
+AGQANwA2ADIANwAzADUANwAAAEIADwABAFAAcgBvAGQAdQBjAHQAVgBlAHIAcwBpAG8AbgAAADEA
+LgAwAC4AOQAyADgAOQAuADMAMgA0ADkANwAAAAAARgAPAAEAQQBzAHMAZQBtAGIAbAB5ACAAVgBl
+AHIAcwBpAG8AbgAAADEALgAwAC4AOQAyADgAOQAuADMAMgA0ADkANwAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAwAAAD8NAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -6050,42 +6424,8 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAEAEAAAABgAAIAAAAAAAAAAAAAAAAAAAAEAAQAAADAAAIAAAAAAAAAAAAAAAAAAAAEAAAAA
-AEgAAABYQAAAGgQAAAAAAAAAAAAAGgQ0AAAAVgBTAF8AVgBFAFIAUwBJAE8ATgBfAEkATgBGAE8A
-AAAAAL0E7/4AAAEAAAABAC2AOyQAAAEALYA7JD8AAAAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAABE
-AAAAAQBWAGEAcgBGAGkAbABlAEkAbgBmAG8AAAAAACQABAAAAFQAcgBhAG4AcwBsAGEAdABpAG8A
-bgAAAAAAAACwBHoDAAABAFMAdAByAGkAbgBnAEYAaQBsAGUASQBuAGYAbwAAAFYDAAABADAAMAAw
-ADAAMAA0AGIAMAAAABoAAQABAEMAbwBtAG0AZQBuAHQAcwAAAAAAAAAiAAEAAQBDAG8AbQBwAGEA
-bgB5AE4AYQBtAGUAAAAAAAAAAABwACQAAQBGAGkAbABlAEQAZQBzAGMAcgBpAHAAdABpAG8AbgAA
-AAAAUwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5AGMANABlADgAZAA4AGQAZABiAGEAYQBhADcA
-ZAA3ADYAMgA3ADMANQA3AAAAPgAPAAEARgBpAGwAZQBWAGUAcgBzAGkAbwBuAAAAAAAxAC4AMAAu
-ADkAMgA3ADUALgAzADIAOAAxADMAAAAAAHAAKAABAEkAbgB0AGUAcgBuAGEAbABOAGEAbQBlAAAA
-UwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5AGMANABlADgAZAA4AGQAZABiAGEAYQBhADcAZAA3
-ADYAMgA3ADMANQA3AC4AZABsAGwAAABIABIAAQBMAGUAZwBhAGwAQwBvAHAAeQByAGkAZwBoAHQA
-AABDAG8AcAB5AHIAaQBnAGgAdAAgAEAAIAAgADIAMAAyADUAAAAqAAEAAQBMAGUAZwBhAGwAVABy
-AGEAZABlAG0AYQByAGsAcwAAAAAAAAAAAHgAKAABAE8AcgBpAGcAaQBuAGEAbABGAGkAbABlAG4A
-YQBtAGUAAABTAFQAXwAxAGIAYwA5ADIAZABhADgAYQA1ADkAYwA0AGUAOABkADgAZABkAGIAYQBh
-AGEANwBkADcANgAyADcAMwA1ADcALgBkAGwAbAAAAGgAJAABAFAAcgBvAGQAdQBjAHQATgBhAG0A
-ZQAAAAAAUwBUAF8AMQBiAGMAOQAyAGQAYQA4AGEANQA5AGMANABlADgAZAA4AGQAZABiAGEAYQBh
-ADcAZAA3ADYAMgA3ADMANQA3AAAAQgAPAAEAUAByAG8AZAB1AGMAdABWAGUAcgBzAGkAbwBuAAAA
-MQAuADAALgA5ADIANwA1AC4AMwAyADgAMQAzAAAAAABGAA8AAQBBAHMAcwBlAG0AYgBsAHkAIABW
-AGUAcgBzAGkAbwBuAAAAMQAuADAALgA5ADIANwA1AC4AMwAyADgAMQAzAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAADAAAAEAwAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</BinaryItem>
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             </ScriptProject>
           </DTS:ObjectData>
         </DTS:Executable>
@@ -6867,6 +7207,22 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
       DTS:LogicalAnd="True"
       DTS:ObjectName="Constraint 7"
       DTS:To="Package\LoadFactCollision" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 8]"
+      DTS:CreationName=""
+      DTS:DTSID="{D4BEAA66-298E-4EF5-A721-96A1C6ACC002}"
+      DTS:From="Package\LoadFactCollision"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 8"
+      DTS:To="Package\ETL_tests" />
+    <DTS:PrecedenceConstraint
+      DTS:refId="Package.PrecedenceConstraints[Constraint 9]"
+      DTS:CreationName=""
+      DTS:DTSID="{4BA18C1E-82B0-4B53-B2CF-97117BA220DA}"
+      DTS:From="Package\ETL_tests"
+      DTS:LogicalAnd="True"
+      DTS:ObjectName="Constraint 9"
+      DTS:To="Package\CleanupStagingTables" />
   </DTS:PrecedenceConstraints>
   <DTS:DesignTimeProperties><![CDATA[<?xml version="1.0"?>
 <!--This CDATA section contains the layout information of the package. The section includes information such as (x,y) coordinates, width, and height.-->
@@ -6879,7 +7235,258 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
     design-time-name="Package">
     <LayoutInfo>
       <GraphLayout
-        Capacity="32" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        Capacity="64" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
+        <NodeLayout
+          Size="184,41.6"
+          Id="Package\CleanupStagingTables"
+          TopLeft="1209.72215612592,274.444442535992" />
+        <NodeLayout
+          Size="164,41.6"
+          Id="Package\DownloadWeather"
+          TopLeft="384.857125490195,719.988092268873" />
+        <NodeLayout
+          Size="152.8,41.6"
+          Id="Package\EnrichCollisions"
+          TopLeft="402.619037797291,640.095233644096" />
+        <NodeLayout
+          Size="186.4,41.6"
+          Id="Package\ETL_tests\Test_dim_location"
+          TopLeft="44.5036989937415,208.333331585593" />
+        <NodeLayout
+          Size="186.4,41.6"
+          Id="Package\ETL_tests\Test_dim_weather"
+          TopLeft="41.378699164484,256.083331608193" />
+        <NodeLayout
+          Size="192,41.6"
+          Id="Package\ETL_tests\Test_RowCount_Casualties"
+          TopLeft="42.3537450942069,110.664817289944" />
+        <NodeLayout
+          Size="192.8,41.6"
+          Id="Package\ETL_tests\Test_RowCount_Collisions"
+          TopLeft="36.2833782955159,14.4999990146359" />
+        <NodeLayout
+          Size="186.4,41.6"
+          Id="Package\ETL_tests\Test_RowCount_Enriched"
+          TopLeft="44.9555965033933,160.166665024393" />
+        <NodeLayout
+          Size="218.4,41.6"
+          Id="Package\ETL_tests\Test_RowCount_fact_collision"
+          TopLeft="25.916666780495,329.583331382192" />
+        <NodeLayout
+          Size="199.2,41.6"
+          Id="Package\ETL_tests\Test_RowCount_Vehicles"
+          TopLeft="38.8213375792949,62.9074064414627" />
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint]"
+          TopLeft="36.2833782955158,35.2999990146359">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="2.53795928377906,48.4074074268268"
+              Start="0,0"
+              End="-4.96204071622094,48.4074074268268">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="-18.5,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-18.5,0"
+                    Point2="-22.5,0"
+                    Point3="-22.5,4" />
+                  <mssgle:LineSegment
+                    End="-22.5,44.4074074268268" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-22.5,44.4074074268268"
+                    Point2="-22.5,48.4074074268268"
+                    Point3="-18.5,48.4074074268268" />
+                  <mssgle:LineSegment
+                    End="-4.96204071622094,48.4074074268268" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint 1]"
+          TopLeft="238.021337579295,83.7074064414627">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-3.66759248508794,42.1574108484814"
+              Start="0,0"
+              End="3.83240751491206,42.1574108484814">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="18.5,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="18.5,0"
+                    Point2="22.5,0"
+                    Point3="22.5,4" />
+                  <mssgle:LineSegment
+                    End="22.5,38.1574108484814" />
+                  <mssgle:CubicBezierSegment
+                    Point1="22.5,38.1574108484814"
+                    Point2="22.5,42.1574108484814"
+                    Point3="18.5,42.1574108484814" />
+                  <mssgle:LineSegment
+                    End="3.83240751491206,42.1574108484814" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint 2]"
+          TopLeft="234.353745094207,137.064817289944">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-2.99814859081366,43.9018477344491"
+              Start="0,0"
+              End="4.50185140918634,43.9018477344491">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="18.5,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="18.5,0"
+                    Point2="22.5,0"
+                    Point3="22.5,4" />
+                  <mssgle:LineSegment
+                    End="22.5,39.9018477344491" />
+                  <mssgle:CubicBezierSegment
+                    Point1="22.5,39.9018477344491"
+                    Point2="22.5,43.9018477344491"
+                    Point3="18.5,43.9018477344491" />
+                  <mssgle:LineSegment
+                    End="4.50185140918634,43.9018477344491" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint 3]"
+          TopLeft="230.903698993742,234.733331585593">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-3.12499982925749,42.1500000226001"
+              Start="0,0"
+              End="4.37500017074251,42.1500000226001">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="18.5,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="18.5,0"
+                    Point2="22.5,0"
+                    Point3="22.5,4" />
+                  <mssgle:LineSegment
+                    End="22.5,38.1500000226001" />
+                  <mssgle:CubicBezierSegment
+                    Point1="22.5,38.1500000226001"
+                    Point2="22.5,42.1500000226001"
+                    Point3="18.5,42.1500000226001" />
+                  <mssgle:LineSegment
+                    End="4.37500017074251,42.1500000226001" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint 4]"
+          TopLeft="231.355596503393,186.566665024393">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-0.451897509651758,42.5666665611994"
+              Start="0,0"
+              End="7.04810249034824,42.5666665611994">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="18.5,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="18.5,0"
+                    Point2="22.5,0"
+                    Point3="22.5,4" />
+                  <mssgle:LineSegment
+                    End="22.5,38.5666665611994" />
+                  <mssgle:CubicBezierSegment
+                    Point1="22.5,38.5666665611994"
+                    Point2="22.5,42.5666665611994"
+                    Point3="18.5,42.5666665611994" />
+                  <mssgle:LineSegment
+                    End="7.04810249034824,42.5666665611994" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\ETL_tests.PrecedenceConstraints[Constraint 5]"
+          TopLeft="134.84768297249,297.683331608193">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,31.8999997739991"
+              Start="0,0"
+              End="0,24.3999997739991">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,24.3999997739991" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <ContainerLayout
+          HeaderHeight="43"
+          IsExpanded="True"
+          PanelSize="282.4,426.4"
+          Size="282.4,469.6"
+          Id="Package\ETL_tests"
+          TopLeft="803.541622763088,32.4666690110499" />
+        <NodeLayout
+          Size="131.2,41.6"
+          Id="Package\FillWeather"
+          TopLeft="394.583311774251,790.516663763308" />
+        <NodeLayout
+          Size="143.2,41.6"
+          Id="Package\LoadDimTime"
+          TopLeft="651.04163109532,800.66666416559" />
+        <NodeLayout
+          Size="161.6,41.6"
+          Id="Package\LoadFactCollision"
+          TopLeft="818.749955265474,525.416666176998" />
         <NodeLayout
           Size="150.4,41.6"
           Id="Package\LoopYears\LoadCasualties"
@@ -6968,7 +7575,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           PanelSize="340,338.4"
           Size="340,381.6"
           Id="Package\LoopYears"
-          TopLeft="321.574056504041,192.133332164155" />
+          TopLeft="323.240723079645,192.133332164155" />
+        <NodeLayout
+          Size="165.6,41.6"
+          Id="Package\MergeDimLocation"
+          TopLeft="747.916625802303,718.249998169392" />
+        <NodeLayout
+          Size="165.6,41.6"
+          Id="Package\MergeDimWeather"
+          TopLeft="799.999956289929,622.916665498995" />
         <NodeLayout
           Size="121.6,41.6"
           Id="Package\ParseList"
@@ -6979,26 +7594,26 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="118.492579474511,159.081481423894"
+              EndConnector="120.159246050115,159.081481423894"
               Start="0,0"
-              End="110.992579474511,159.081481423894">
+              End="112.659246050115,159.081481423894">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="55.2462897372557,0" />
+                    End="56.0796230250577,0" />
                   <mssgle:CubicBezierSegment
-                    Point1="55.2462897372557,0"
-                    Point2="59.2462897372557,0"
-                    Point3="59.2462897372557,4" />
+                    Point1="56.0796230250577,0"
+                    Point2="60.0796230250577,0"
+                    Point3="60.0796230250577,4" />
                   <mssgle:LineSegment
-                    End="59.2462897372557,155.081481423894" />
+                    End="60.0796230250577,155.081481423894" />
                   <mssgle:CubicBezierSegment
-                    Point1="59.2462897372557,155.081481423894"
-                    Point2="59.2462897372557,159.081481423894"
-                    Point3="63.2462897372557,159.081481423894" />
+                    Point1="60.0796230250577,155.081481423894"
+                    Point2="60.0796230250577,159.081481423894"
+                    Point3="64.0796230250577,159.081481423894" />
                   <mssgle:LineSegment
-                    End="110.992579474511,159.081481423894" />
+                    End="112.659246050115,159.081481423894" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -7007,26 +7622,15 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <AnnotationLayout
-          Text="ss"
-          ParentId="Package"
-          FontInfo="{assembly:Null}"
-          Size="39.2,40"
-          Id="7ae0b04d-86a4-4542-807f-a64d6e9903bd"
-          TopLeft="1266.66659745905,612.666662447982" />
-        <NodeLayout
-          Size="152.8,41.6"
-          Id="Package\EnrichCollisions"
-          TopLeft="402.619037797291,640.095233644096" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 1]"
-          TopLeft="491.574056504041,573.733332164155">
+          TopLeft="493.240723079645,573.733332164155">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="-12.5550187067504,66.3619014799409"
+              EndConnector="-14.221685282354,66.361901479941"
               Start="0,0"
-              End="-12.5550187067504,58.8619014799409">
+              End="-14.221685282354,58.861901479941">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
@@ -7037,13 +7641,13 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
                     Point2="0,33.1809507399705"
                     Point3="-4,33.1809507399705" />
                   <mssgle:LineSegment
-                    End="-8.55501870675039,33.1809507399705" />
+                    End="-10.221685282354,33.1809507399705" />
                   <mssgle:CubicBezierSegment
-                    Point1="-8.55501870675039,33.1809507399705"
-                    Point2="-12.5550187067504,33.1809507399705"
-                    Point3="-12.5550187067504,37.1809507399705" />
+                    Point1="-10.221685282354,33.1809507399705"
+                    Point2="-14.221685282354,33.1809507399705"
+                    Point3="-14.221685282354,37.1809507399705" />
                   <mssgle:LineSegment
-                    End="-12.5550187067504,58.8619014799409" />
+                    End="-14.221685282354,58.861901479941" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -7052,10 +7656,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="164,41.6"
-          Id="Package\DownloadWeather"
-          TopLeft="384.857125490195,719.988092268873" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 2]"
           TopLeft="479.019037797291,681.695233644096">
@@ -7090,24 +7690,20 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="131.2,41.6"
-          Id="Package\FillWeather"
-          TopLeft="393.749978486449,787.916663781388" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 3]"
-          TopLeft="463.103551988322,761.588092268873">
+          TopLeft="463.520218632223,761.588092268873">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,26.3285715125146"
+              EndConnector="0,28.928571494435"
               Start="0,0"
-              End="0,18.8285715125146">
+              End="0,21.428571494435">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,18.8285715125146" />
+                    End="0,21.428571494435" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -7116,36 +7712,32 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="143.2,41.6"
-          Id="Package\LoadDimTime"
-          TopLeft="651.04163109532,800.66666416559" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 4]"
-          TopLeft="524.949978486449,808.716663781388">
+          TopLeft="525.783311774251,811.316663763308">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="126.091652608871,12.7500003842016"
+              EndConnector="125.258319321069,10.150000402282"
               Start="0,0"
-              End="118.591652608871,12.7500003842016">
+              End="117.758319321069,10.150000402282">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="59.0458263044354,0" />
+                    End="58.6291596605345,0" />
                   <mssgle:CubicBezierSegment
-                    Point1="59.0458263044354,0"
-                    Point2="63.0458263044354,0"
-                    Point3="63.0458263044354,4" />
+                    Point1="58.6291596605345,0"
+                    Point2="62.6291596605345,0"
+                    Point3="62.6291596605345,4" />
                   <mssgle:LineSegment
-                    End="63.0458263044354,8.7500003842016" />
+                    End="62.6291596605345,6.15000040228199" />
                   <mssgle:CubicBezierSegment
-                    Point1="63.0458263044354,8.7500003842016"
-                    Point2="63.0458263044354,12.7500003842016"
-                    Point3="67.0458263044354,12.7500003842016" />
+                    Point1="62.6291596605345,6.15000040228199"
+                    Point2="62.6291596605345,10.150000402282"
+                    Point3="66.6291596605345,10.150000402282" />
                   <mssgle:LineSegment
-                    End="118.591652608871,12.7500003842016" />
+                    End="117.758319321069,10.150000402282" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -7154,10 +7746,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="165.6,41.6"
-          Id="Package\MergeDimLocation"
-          TopLeft="747.916625802303,718.249998169392" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 5]"
           TopLeft="722.64163109532,800.66666416559">
@@ -7192,10 +7780,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="165.6,41.6"
-          Id="Package\MergeDimWeather"
-          TopLeft="799.999956289929,622.916665498995" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 6]"
           TopLeft="830.716625802303,718.249998169392">
@@ -7230,10 +7814,6 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="161.6,41.6"
-          Id="Package\LoadFactCollision"
-          TopLeft="818.749955265474,525.416666176998" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 7]"
           TopLeft="882.799956289929,622.916665498995">
@@ -7268,11 +7848,86 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 8]"
+          TopLeft="899.549955265474,525.416666176998">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="45.1916674976137,-23.3499971659481"
+              Start="0,0"
+              End="45.1916674976137,-15.8499971659481">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,-7.67499858297404" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,-7.67499858297404"
+                    Point2="0,-11.674998582974"
+                    Point3="4,-11.674998582974" />
+                  <mssgle:LineSegment
+                    End="41.1916674976137,-11.674998582974" />
+                  <mssgle:CubicBezierSegment
+                    Point1="41.1916674976137,-11.674998582974"
+                    Point2="45.1916674976137,-11.674998582974"
+                    Point3="45.1916674976137,-15.674998582974" />
+                  <mssgle:LineSegment
+                    End="45.1916674976137,-15.8499971659481" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 9]"
+          TopLeft="1085.94162276309,267.26666901105">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="123.78053336283,27.9777735249422"
+              Start="0,0"
+              End="116.28053336283,27.9777735249422">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="57.8902666814148,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="57.8902666814148,0"
+                    Point2="61.8902666814148,0"
+                    Point3="61.8902666814148,4" />
+                  <mssgle:LineSegment
+                    End="61.8902666814148,23.9777735249422" />
+                  <mssgle:CubicBezierSegment
+                    Point1="61.8902666814148,23.9777735249422"
+                    Point2="61.8902666814148,27.9777735249422"
+                    Point3="65.8902666814148,27.9777735249422" />
+                  <mssgle:LineSegment
+                    End="116.28053336283,27.9777735249422" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <AnnotationLayout
+          Text="ss"
+          ParentId="Package"
+          FontInfo="{assembly:Null}"
+          Size="39.2,40"
+          Id="7ae0b04d-86a4-4542-807f-a64d6e9903bd"
+          TopLeft="1266.66659745905,612.666662447982" />
         <AnnotationLayout
           Text="o"
           ParentId="Package"
           FontInfo="{assembly:Null}"
-          Size="36,60"
+          Size="36,40"
           Id="7e4cd7d7-5187-47b0-8c0e-c0dc81eb63e5"
           TopLeft="5.5,363.000001356006" />
       </GraphLayout>

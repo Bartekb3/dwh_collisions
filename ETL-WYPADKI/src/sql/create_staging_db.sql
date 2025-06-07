@@ -1,4 +1,3 @@
--- Tworzenie bazy, jeœli nie istnieje
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'DWH_Staging')
     CREATE DATABASE DWH_Staging;
 GO
@@ -6,7 +5,6 @@ GO
 USE DWH_Staging;
 GO
 
--- COLLISIONS
 IF OBJECT_ID('dbo.Stg_Collisions_Raw', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Stg_Collisions_Raw (
@@ -51,7 +49,6 @@ BEGIN
 END
 GO
 
--- VEHICLES
 IF OBJECT_ID('dbo.Stg_Vehicles_Raw', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Stg_Vehicles_Raw (
@@ -89,14 +86,12 @@ BEGIN
         dir_to_e VARCHAR(MAX) NULL,
         dir_to_n VARCHAR(MAX) NULL,
         driver_distance_banding VARCHAR(MAX) NULL,
- --       CONSTRAINT PK_Stg_Vehicles PRIMARY KEY (accident_index, vehicle_reference),
         CONSTRAINT FK_Vehicle_Collision FOREIGN KEY (accident_index)
             REFERENCES dbo.Stg_Collisions_Raw(accident_index)
     );
 END
 GO
 
--- CASUALTIES
 IF OBJECT_ID('dbo.Stg_Casualties_Raw', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.Stg_Casualties_Raw (
@@ -121,7 +116,6 @@ BEGIN
         lsoa_of_casualty VARCHAR(MAX) NULL,
         enhanced_casualty_severity VARCHAR(MAX) NULL,
         casualty_distance_banding VARCHAR(MAX) NULL,
-    --    CONSTRAINT PK_Stg_Casualties PRIMARY KEY (accident_index, casualty_reference, vehicle_reference),
         CONSTRAINT FK_Casualty_Collision FOREIGN KEY (accident_index)
             REFERENCES dbo.Stg_Collisions_Raw(accident_index)
     );
@@ -143,7 +137,6 @@ BEGIN
         escooter_involved BIT,
         enhanced_severity_collision SMALLINT,
 
-        -- Nowe kolumny lokalizacyjne i drogowe
         location_easting_osgr INT,
         location_northing_osgr INT,
         local_authority_district VARCHAR(100),
@@ -168,7 +161,6 @@ BEGIN
         trunk_road_flag BIT,
         lsoa_of_accident_location VARCHAR(50),
 
-        -- Dotychczasowe kolumny pojazdów i ofiar
         vehicle_type_car INT,
         vehicle_type_bus INT,
         vehicle_type_motorcycle INT,
