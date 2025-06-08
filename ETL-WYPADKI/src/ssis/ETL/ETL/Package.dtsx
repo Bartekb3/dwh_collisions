@@ -11,8 +11,8 @@
   DTS:LocaleID="1045"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="103"
-  DTS:VersionGUID="{5EB127C2-1B66-442C-B054-1EB6733195AC}">
+  DTS:VersionBuild="106"
+  DTS:VersionGUID="{AF4F6F2A-6BDD-4F43-9537-6E890ACBBCCF}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -969,7 +969,7 @@
       DTS:Namespace="User"
       DTS:ObjectName="CurrentYear">
       <DTS:VariableValue
-        DTS:DataType="8">2020</DTS:VariableValue>
+        DTS:DataType="8">2019</DTS:VariableValue>
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
@@ -1015,7 +1015,7 @@
       DTS:Namespace="User"
       DTS:ObjectName="YearList">
       <DTS:VariableValue
-        DTS:DataType="8">2020</DTS:VariableValue>
+        DTS:DataType="8">2019,2020,2021,2022,2023</DTS:VariableValue>
     </DTS:Variable>
     <DTS:Variable
       DTS:CreationName=""
@@ -7752,26 +7752,26 @@ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</BinaryItem>
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="108.074994706983,-40.8166659961972"
+              EndConnector="108.074994706983,-40.8166659961979"
               Start="0,0"
-              End="108.074994706983,-33.3166659961972">
+              End="108.074994706983,-33.3166659961979">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,-16.4083329980986" />
+                    End="0,-16.408332998099" />
                   <mssgle:CubicBezierSegment
-                    Point1="0,-16.4083329980986"
-                    Point2="0,-20.4083329980986"
-                    Point3="4,-20.4083329980986" />
+                    Point1="0,-16.408332998099"
+                    Point2="0,-20.408332998099"
+                    Point3="4,-20.408332998099" />
                   <mssgle:LineSegment
-                    End="104.074994706983,-20.4083329980986" />
+                    End="104.074994706983,-20.408332998099" />
                   <mssgle:CubicBezierSegment
-                    Point1="104.074994706983,-20.4083329980986"
-                    Point2="108.074994706983,-20.4083329980986"
-                    Point3="108.074994706983,-24.4083329980986" />
+                    Point1="104.074994706983,-20.408332998099"
+                    Point2="108.074994706983,-20.408332998099"
+                    Point3="108.074994706983,-24.408332998099" />
                   <mssgle:LineSegment
-                    End="108.074994706983,-33.3166659961972" />
+                    End="108.074994706983,-33.3166659961979" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
